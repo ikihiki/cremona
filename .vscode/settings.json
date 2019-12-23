@@ -1,5 +1,14 @@
 {
     "files.associations": {
-        "module.h": "c"
+        "module.h": "c",
+        "stddef.h": "c",
+        "compiler_types.h": "c",
+        "fs.h": "c",
+        "cdev.h": "c",
+        "device.h": "c",
+        "ratelimit.h": "c",
+        "sched.h": "c",
+        "types.h": "c",
+        "log2.h": "c"
     }
 }
