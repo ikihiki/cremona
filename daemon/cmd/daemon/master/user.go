@@ -1,27 +1,38 @@
-package main
+package master
 
 import (
 	"bufio"
-	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
-func searchHomeDir() []UserInfo {
+type UserId int
+
+type User struct {
+	HomeDirectory string
+	Username      string
+	UserId        UserId
+}
+
+func searchHomeDir() []User {
 	fp, err := os.Open("/etc/passwd")
 	if err != nil {
 		panic(err)
 	}
 
-	var result []UserInfo
+	var result []User
 	scanner := bufio.NewScanner(fp)
 	for scanner.Scan() {
 		fields := strings.Split(scanner.Text(), ":")
-		fmt.Printf("%s", fields[5])
-		user := UserInfo{
+		userId, err := strconv.Atoi(fields[2])
+		if err != nil {
+			continue
+		}
+		user := User{
 			HomeDirectory: fields[5],
-			LinuxUserId:   fields[2],
-			LinuxUsername: fields[0],
+			UserId:        UserId(userId),
+			Username:      fields[0],
 		}
 
 		if isExist(user.HomeDirectory + "/.cremona") {

@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/lib/modules/5.4.3-arch1-1/build/include",
+                "/usr/lib/modules/5.4.3-arch1-1/build/arch/x86/include",
+                "/usr/lib/modules/5.4.3-arch1-1/build/arch/x86/include/generated"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c89",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

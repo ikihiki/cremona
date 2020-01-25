@@ -1,0 +1,3 @@
+[submodule "driver/third_party/googletest"]
+	path = driver/third_party/googletest
+	url = https://github.com/google/googletest.git

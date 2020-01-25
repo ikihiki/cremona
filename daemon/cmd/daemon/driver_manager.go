@@ -46,7 +46,7 @@ func (h *NetLinkHandle) sendMessage(typeId uint16, data nl.NetlinkRequestData, f
 }
 
 func (h *NetLinkHandle) reciveMessage() ([]byte, error) {
-	msgs, err := h.socket.Receive()
+	msgs, _, err := h.socket.Receive()
 	if err != nil {
 		return nil, err
 	}
@@ -115,11 +115,10 @@ func (h *NetLinkHandle) waitCommand() {
 }
 
 func (h *NetLinkHandle) waitCommandIntenal() error {
-	msgs, err := h.socket.Receive()
+	msgs, _,err := h.socket.Receive()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Recive Message %#v\n", msgs)
 	for _, msg := range msgs {
 		if msg.Header.Type == NewTootTypeId {
 			fmt.Printf("Recive new toot Message %#v\n", msg)
