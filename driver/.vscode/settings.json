@@ -2,6 +2,13 @@
     "files.associations": {
         "module.h": "c",
         "init.h": "c",
-        "fs.h": "c"
+        "fs.h": "c",
+        "cremona.h": "c",
+        "message.h": "c",
+        "header.h": "c",
+        "khash.h": "c",
+        "driver.h": "c",
+        "iomanip": "cpp",
+        "typeinfo": "cpp"
     }
 }

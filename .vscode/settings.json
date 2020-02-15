@@ -9,6 +9,9 @@
         "ratelimit.h": "c",
         "sched.h": "c",
         "types.h": "c",
-        "log2.h": "c"
-    }
+        "log2.h": "c",
+        "system_error": "c",
+        "iomanip": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

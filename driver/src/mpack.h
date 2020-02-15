@@ -483,11 +483,27 @@
 #define __STDC_CONSTANT_MACROS 1
 #endif
 
-//#include <stddef.h>
-//#include <stdint.h>
-//#include <stdbool.h>
+#ifdef CRMNA_TEST
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <limits.h>
+
+#define S8_MIN SCHAR_MIN
+#define S8_MAX SCHAR_MAX
+#define U8_MAX UCHAR_MAX
+#define S16_MIN SHRT_MIN
+#define S16_MAX SHRT_MAX
+#define U16_MAX USHRT_MAX
+#define S32_MIN INT_MIN
+#define S32_MAX INT_MAX
+#define U32_MAX UINT_MAX
+#define S64_MAX LLONG_MAX
+
+#else
 #include <linux/types.h>
 #include <linux/limits.h>
+#endif
 
 #if MPACK_STDLIB
 #include <string.h>
@@ -684,7 +700,11 @@ MPACK_HEADER_START
     #if defined(_MSC_VER)
         #define MPACK_NOINLINE __declspec(noinline)
     #elif defined(__GNUC__) || defined(__clang__)
-        #define MPACK_NOINLINE noinline
+        #ifdef CRMNA_TEST
+            #define MPACK_NOINLINE __attribute__((noinline))
+        #else
+            #define MPACK_NOINLINE noinline
+        #endif
     #endif
 #endif
 #ifndef MPACK_NOINLINE

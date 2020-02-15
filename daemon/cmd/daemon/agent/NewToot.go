@@ -59,12 +59,7 @@ func (message *NewTootResult) Len() int {
 	buff := new(bytes.Buffer)
 	encoder := msgpack.NewEncoder(buff)
 	encoder.UseCompactEncoding(true)
-	encoder.EncodeArrayLen(2)
-	encoder.EncodeArrayLen(16)
-	for i := 0; i < 16; i++ {
-		encoder.EncodeUint8(uint8(message.Uuid[i]))
-	}
-	encoder.EncodeInt32(int32(message.Result))
+	encoder.Encode([]interface{}{message.Uuid, message.Result})
 	return buff.Len()
 }
 
@@ -72,11 +67,6 @@ func (message *NewTootResult) Serialize() []byte {
 	buff := new(bytes.Buffer)
 	encoder := msgpack.NewEncoder(buff)
 	encoder.UseCompactEncoding(true)
-	encoder.EncodeArrayLen(2)
-	encoder.EncodeArrayLen(16)
-	for i := 0; i < 16; i++ {
-		encoder.EncodeUint8(uint8(message.Uuid[i]))
-	}
-	encoder.EncodeInt32(int32(message.Result))
+	encoder.Encode([]interface{}{message.Uuid, message.Result})
 	return buff.Bytes()
 }

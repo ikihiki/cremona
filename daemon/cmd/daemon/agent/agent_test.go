@@ -37,6 +37,7 @@ func (mock *MockDriver) GetIsConnectiong() bool {
 	return result.Bool(0)
 }
 func (mock *MockDriver) SendMessage(message Message) error {
+	log.Printf("%#v", message.Serialize())
 	result := mock.Called(message)
 	return result.Error(0)
 }
@@ -99,7 +100,7 @@ func TestAgent_Run_ReciveAddTootString(t *testing.T) {
 	encoder := msgpack.NewEncoder(buff)
 	encoder.Encode([]interface{}{message.Uuid, message.Text})
 	messageData := buff.Bytes()
-	log.Printf("%#v\n", messageData)
+	//log.Printf("%#v\n", messageData)
 	driver := new(MockDriver)
 	driver.On("Connect").Return(nil)
 	driver.On("GetIsConnectiong").Return(true).Once()
@@ -119,6 +120,7 @@ func TestAgent_Run_ReciveAddTootString(t *testing.T) {
 		result := message.(*AddTootStringResult)
 		return reflect.DeepEqual(result.Uuid, uuid) && result.Result == len(text)
 	}))
+	assert.Fail(t, "test")
 }
 
 func TestAgent_Run_ReciveSendToot (t *testing.T) {

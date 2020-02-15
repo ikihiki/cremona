@@ -40,6 +40,7 @@ func (this *AddTootStringResult) GetFlags() uint16 {
 func (message *AddTootStringResult) Len() int {
 	buff := new(bytes.Buffer)
 	encoder := msgpack.NewEncoder(buff)
+	encoder.UseCompactEncoding(true)
 	encoder.Encode([]interface{}{message.Uuid, message.Result})
 	return buff.Len()
 }
@@ -47,6 +48,7 @@ func (message *AddTootStringResult) Len() int {
 func (message *AddTootStringResult) Serialize() []byte {
 	buff := new(bytes.Buffer)
 	encoder := msgpack.NewEncoder(buff)
+	encoder.UseCompactEncoding(true)
 	encoder.Encode([]interface{}{message.Uuid, message.Result})
 	return buff.Bytes()
 }
