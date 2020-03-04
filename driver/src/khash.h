@@ -131,11 +131,9 @@ int main() {
 #include <linux/limits.h>
 #include <linux/slab.h>
 
-void *realloc(void *ptr, size_t size);
-
 #define klcalloc(N, Z) kcalloc(N, Z, GFP_KERNEL)
 #define klmalloc(Z) kmalloc(Z, GFP_KERNEL)
-#define klrealloc(P, Z) realloc(P, Z)
+#define klrealloc(P, Z) krealloc(P, Z, GFP_KERNEL)
 #define klfree(P) kfree(P)
 
 #define kh_inline

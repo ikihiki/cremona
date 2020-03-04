@@ -21,11 +21,11 @@ $(TARGET): $(TESTOBJECTS) $(OBJECTS) $(LIBS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	-mkdir -p $(OBJDIR)
-	$(COMPILER) $(CFLAGS) $(INCLUDE) -o $@ -c $<
+	$(COMPILER) $(CFLAGS) $(INCLUDE) -o $@ -c "$(abspath $<)"
 
 $(OBJDIR)/%.o: $(TESTDIR)/%.cpp
 	-mkdir -p $(OBJDIR)
-	$(COMPILER) $(CFLAGS) $(TEST_INCLUDE) -o $@ -c $<
+	$(COMPILER) $(CFLAGS) $(TEST_INCLUDE) -o $@ -c "$(abspath $<)"
 
 all: clean $(TARGET)
 
@@ -35,7 +35,3 @@ clean:
 run: $(TARGET) 
 	-$(TARGET)
 .PHONY: run
-
-
-tttt:
-	@echo $(SOURCES)

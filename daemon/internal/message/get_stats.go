@@ -14,7 +14,7 @@ func (this *GetStats) GetMessageTypeId() uint16 {
 	return unix.NLMSG_MIN_TYPE * 2
 }
 func (this *GetStats) GetFlags() uint16 {
-	return 0
+	return unix.NLM_F_REQUEST
 }
 
 func (message *GetStats) Len() int {

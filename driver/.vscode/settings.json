@@ -9,6 +9,16 @@
         "khash.h": "c",
         "driver.h": "c",
         "iomanip": "cpp",
-        "typeinfo": "cpp"
-    }
+        "typeinfo": "cpp",
+        "forward_list": "cpp",
+        "*.tcc": "cpp",
+        "fstream": "cpp",
+        "ostream": "cpp"
+    },
+    "catch2TestExplorer.executables": [
+        {
+            "pattern": "test/bin/driver_test",
+        }
+    ],
+    "C_Cpp.errorSquiggles": "Disabled"
 }

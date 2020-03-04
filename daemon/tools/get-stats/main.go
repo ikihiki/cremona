@@ -11,7 +11,7 @@ func main() {
 	port := flag.Int("port", 17, "port")
 	flag.Parse()
 
-	driver, err := driver.NewDriver(*port)
+	driver, err := driver.NewDriver(*port, nil)
 	if err != nil {
 		panic(err)
 	}

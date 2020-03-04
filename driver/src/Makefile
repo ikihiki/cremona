@@ -1,5 +1,5 @@
 obj-m += cremona.o
-cremona-objs := main.o  mpack.o serializer.o device_manager.o  khash.o
+cremona-objs := main.o  mpack.o serializer.o device_manager.o device_map.o device.o util.o toot_map.o toot.o 
 
 ccflags-y := -DMPACK_HAS_CONFIG -std=gnu99 -Wno-declaration-after-statement
 
