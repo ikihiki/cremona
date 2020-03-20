@@ -1,4 +1,3 @@
-
 ROOT := $(realpath $(dir $(realpath $(firstword $(MAKEFILE_LIST))))../)
 OUTDIR := $(ROOT)/build
 DRIVER := $(OUTDIR)/driver/cremona.ko
@@ -16,6 +15,10 @@ DEVICE_OP := $(OUTDIR)/daemon/device-op
 
 TOOT_OC_SRC := $(wildcard $(DAEMON_SRC_ROOT)/tools/toot-oc/*.go)
 TOOT_OC := $(OUTDIR)/daemon/toot-oc
+
+SEND_TXT_DIR := $(DAEMON_SRC_ROOT)/tools/send-txt
+SEND_TXT_SRC := $(wildcard $(SEND_TXT_DIR)/*.go)
+SEND_TXT := $(OUTDIR)/daemon/send-txt
 
 
 $(DRIVER): $(DRIVER_SRC)
@@ -36,7 +39,12 @@ $(TOOT_OC) : $(DAEMON_INTERNAL_SRC) $(TOOT_OC_SRC)
 	cd ../daemon/tools/toot-oc; \
 	go build -o $(TOOT_OC)
 
-build: $(DRIVER) $(GET_STATS) $(DEVICE_OP) $(TOOT_OC);
+$(SEND_TXT) : $(DAEMON_INTERNAL_SRC) $(SEND_TXT_SRC)
+	cd $(SEND_TXT_DIR); \
+	go build -o $(SEND_TXT)
+
+
+build: $(DRIVER) $(GET_STATS) $(DEVICE_OP) $(TOOT_OC) $(SEND_TXT);
 
 load: $(DRIVER)
 	sudo insmod $(DRIVER)
@@ -59,7 +67,10 @@ toot-test:
 	sudo $(TOOT_OC)
 	make unload
 
-test: 
-	@echo $(DRIVER_SRC)
+text-test:
+	make load
+	sudo $(SEND_TXT)
+	make unload
+
 clean:
 	rm -r $(OUTDIR)

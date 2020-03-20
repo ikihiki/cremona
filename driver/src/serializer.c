@@ -113,12 +113,13 @@ bool deserialize_new_toot_result(const char *data, size_t length,
   return true;
 }
 
-int serialize_add_toot_str(const add_toot_str_t *data, char *dest,
+int serialize_add_toot_text(const add_toot_text_t *data, char *dest,
                            size_t max_length) {
   mpack_writer_t writer;
   mpack_writer_init(&writer, dest, max_length);
-  mpack_start_array(&writer, 2);
-  mpack_write_bin(&writer, (const char *)data->uuid, 16);
+  mpack_start_array(&writer, 3);
+  mpack_write_u64(&writer, data->toot_id);
+  mpack_write_u64(&writer, data->device_id);
   mpack_write_utf8_cstr_or_nil(&writer, data->text);
   mpack_finish_array(&writer);
   if (mpack_writer_destroy(&writer) != mpack_ok) {
@@ -127,23 +128,23 @@ int serialize_add_toot_str(const add_toot_str_t *data, char *dest,
   return mpack_writer_buffer_used(&writer);
 }
 
-bool deserialize_add_toot_str_result(const char *data, size_t length,
-                                    add_toot_str_result_t *result) {
+bool deserialize_add_toot_text_result(const char *data, size_t length,
+                                    add_toot_text_result_t *result) {
   mpack_tree_t tree;
   mpack_node_data_t nodes[50];
   mpack_tree_init_pool(&tree, data, length, nodes, 50);
   mpack_tree_parse(&tree);
   mpack_node_t root = mpack_tree_root(&tree);
-  mpack_node_t uuid = mpack_node_array_at(root, 0);
-  if (mpack_node_bin_size(uuid) != 16) {
-    return -1;
-  }
-  memcpy(result->uuid, mpack_node_bin_data(uuid), 16);
-  result->result = mpack_node_int(mpack_node_array_at(root, 1));
+  mpack_node_t toot_id = mpack_node_array_at(root, 0);
+  result->toot_id = mpack_node_u64(toot_id);
+  mpack_node_t device_id = mpack_node_array_at(root, 1);
+  result->device_id = mpack_node_u64(device_id);
+  mpack_node_t result_num = mpack_node_array_at(root, 2);
+  result->result = mpack_node_i32(result_num);
   if (mpack_tree_destroy(&tree) != mpack_ok) {
-    return -1;
+    return false;
   }
-  return 0;
+  return true;
 }
 
 int serialize_send_toot(const send_toot_t *data, char *dest,

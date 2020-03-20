@@ -51,5 +51,8 @@ void cremona_toot_lock(cremona_toot_t *toot);
 void cremona_toot_unlock(cremona_toot_t *toot);
 bool destroy_toot(cremona_toot_t *toot, crmna_err_t *error);
 void wait_toot(cremona_toot_t *toot, toot_wait_type_t wait_type);
+bool recive_add_toot_text_result(cremona_toot_t *toot,
+                                 add_toot_text_result_t *message,
+                                 crmna_err_t *err);
 
 #endif

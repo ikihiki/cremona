@@ -49,13 +49,14 @@ typedef enum toot_state {
   CREANUPED,
   OPEN_RESULT_WAIT,
   OPEND,
-  ADD_STRING_RESULT_WAIT,
+  ADD_TEXT_RESULT_WAIT,
+  WRITE_COMPLEATE,
   CLOSE_RESULT_WAIT,
   DESTROYED,
   TOOT_ERROR
 } toot_state_t;
 
-typedef enum toot_wait_type{
+typedef enum toot_wait_type {
   WAIT_OPEN,
   WAIT_WRITE,
   WAIT_CLOSE
@@ -65,6 +66,9 @@ typedef struct cremona_toot {
   uint64_t id;
   toot_state_t state;
   cremona_device_t *device;
+  //char buf[500];
+  int prev_count;
+  int send_count;
   int refCount;
 } cremona_toot_t;
 
@@ -136,7 +140,10 @@ cremona_device_t *get_cremona_device(cremona_device_manager_t *device_manager,
 
 cremona_toot_t *add_ref_toot(cremona_toot_t *toot);
 void release_toot(cremona_toot_t *toot);
-cremona_toot_t *open_toot(cremona_device_t *device, bool wait, crmna_err_t *err);
-bool close_toot( cremona_toot_t *toot, crmna_err_t *err);
+cremona_toot_t *open_toot(cremona_device_t *device, bool wait,
+                          crmna_err_t *err);
+bool close_toot(cremona_toot_t *toot, crmna_err_t *err);
+
+bool add_toot_text(cremona_toot_t *toot, char *text,  bool wait, crmna_err_t *err);
 
 #endif

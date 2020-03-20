@@ -7,7 +7,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-type CreateDevice struct{
+type CreateDevice struct {
 	Name string
 }
 
@@ -34,18 +34,17 @@ func (message *CreateDevice) Serialize() []byte {
 	return buff.Bytes()
 }
 
-
 type CreateDeviceResult struct {
 	Id uint64
 }
 
-func DeserializeCreateAccountResult(data []byte) *CreateDeviceResult {
+func DeserializeCreateAccountResult(data []byte) (*CreateDeviceResult, error) {
 	buff := new(bytes.Buffer)
 	buff.Write(data)
 	decoder := msgpack.NewDecoder(buff)
 	result := new(CreateDeviceResult)
-	decoder.Decode(result)
-	return result
+	err := decoder.Decode(result)
+	return result, err
 }
 
 func (this *CreateDeviceResult) GetMessageTypeId() uint16 {

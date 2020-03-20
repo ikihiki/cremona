@@ -1,93 +1,77 @@
 package agent
 
 import (
-	"log"
-	"github.com/google/uuid"
+	"os"
+	"os/signal"
+	"sync"
+
+	"github.com/ikihiki/cremona/daemon/internal/config"
+	"github.com/ikihiki/cremona/daemon/internal/driver"
+	"github.com/ikihiki/cremona/daemon/internal/mastdon"
+	"github.com/ikihiki/cremona/daemon/internal/toot"
 )
 
 type Agent struct {
-	config  ConfigLoader
-	mastdon MastdonClient
-	driver  DriverCommunicator
-	toots    map[uuid.UUID]*Toot
+	config        *config.Config
+	mastdonClient *mastdon.Client
+	tootManage    *toot.TootManage
+	connection    *driver.Connection
+	device        *driver.Device
 }
 
-type ConfigLoader interface {
-	GetConfig() *Config
-}
+func NewAgent(baseDir string) (*Agent, error) {
+	config, err := config.LoadConfig(baseDir)
+	if err != nil {
+		return nil, err
+	}
 
-type MastdonClient interface {
-	Toot(toot *Toot)
-}
+	mastdonClient, err := mastdon.NewMastdonCilent(config)
+	if err != nil {
+		return nil, err
+	}
 
-func NewAgent(config ConfigLoader, mstdon MastdonClient, driver DriverCommunicator) (*Agent, error) {
-	agent := Agent{config: config, mastdon: mstdon, driver: driver, toots: make(map[uuid.UUID]*Toot)}
+	tootManage, err := toot.NewTootManage(config, mastdonClient)
+	if err != nil {
+		return nil, err
+	}
+
+	connection := driver.NewConnection(17)
+	err = connection.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	device, err := driver.NewDevice(connection, config, tootManage)
+	if err != nil {
+		connection.DisConnect()
+		return nil, err
+	}
+
+	agent := Agent{
+		config:        config,
+		mastdonClient: mastdonClient,
+		tootManage:    tootManage,
+		connection:    connection,
+		device:        device,
+	}
 	return &agent, nil
 }
 
 func (agent *Agent) Run() error {
-	err := agent.driver.Connect()
-	if err != nil {
-		return err
-	}
+	wg := &sync.WaitGroup{}
+	cancel := make(chan interface{})
+    // シグナル用のチャネル定義
+    quit := make(chan os.Signal)
 
-	for agent.driver.GetIsConnectiong() {
-		mesgs, err := agent.driver.ReciveMessage()
-		if err != nil {
-			log.Println("error in runnning recive message", err)
-		}
-		agent.analyzeMessage(mesgs)
-	}
-	return nil
-}
+    // 受け取るシグナルを設定
+    signal.Notify(quit, os.Interrupt)
 
-func (agent *Agent) analyzeMessage(messages []RecivedMessage) {
-	for _, message := range messages {
-		var err error
-		switch message.Type {
-		case (&NewToot{}).GetMessageTypeId():
-			err = agent.processNewToot(message.Data)
-		case (&AddTootString{}).GetMessageTypeId():
-			err = agent.processAddTootString(message.Data)
-		case (&SendToot{}).GetMessageTypeId():
-			err = agent.processSendToot(message.Data)
-		}
-		if err != nil {
-			log.Println(err, message)
-		}
-	}
-}
+	go agent.device.RunMessageLoop(cancel, wg)
 
-func (agent *Agent) processNewToot(data []byte) error {
-	newToot, err := (&NewToot{}).Deserialize(data)
-	if err != nil {
-		return err
-	}
-	agent.toots[newToot.Uuid] = &Toot{}
-	result := &NewTootResult{Uuid: newToot.Uuid, Result: 0}
-	agent.driver.SendMessage(result)
-	return nil
-}
-
-
-func (agent *Agent)processAddTootString(data []byte) error {
-	addTootString, err := (&AddTootString{}).Deserialize(data)
-	if err != nil {
-		return err
-	}
-	agent.toots[addTootString.Uuid].AddStatusText(addTootString.Text)
-	result := &AddTootStringResult{Uuid: addTootString.Uuid, Result: len(addTootString.Text)}
-	agent.driver.SendMessage(result)
-	return nil
-}
-
-func (agent *Agent)processSendToot(data []byte) error {
-	addTootString, err := (&SendToot{}).Deserialize(data)
-	if err != nil {
-		return err
-	}
-	agent.mastdon.Toot(agent.toots[addTootString.Uuid])
-	result := &SendTootResult{Uuid: addTootString.Uuid, Result: 0}
-	agent.driver.SendMessage(result)
-	return nil
+	<-quit
+	cancel <- nil
+	wg.Wait()
+	err := agent.device.DestroyDevice()
+	agent.connection.DisConnect()
+	return err
 }

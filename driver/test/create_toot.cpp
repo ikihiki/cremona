@@ -176,7 +176,6 @@ TEST(device, create_toot_and_wait) {
   EXPECT_EQ(10071698311465, toot->id);
   EXPECT_EQ(OPEN_RESULT_WAIT, toot->state);
   EXPECT_EQ(device, toot->device);
-  EXPECT_EQ(1, toot->refCount);
 
   unsigned char new_toot_result_message[] = {
       0x93, 0xcf, 0x00, 0x00, 0x09, 0x29, 0x00, 0x00, 0x09, 0x29, 0xcf, 0x00,
@@ -184,7 +183,8 @@ TEST(device, create_toot_and_wait) {
   reciveMessage(&device_manager, 100, CRMNA_NEW_TOOT_RESULT,
                 (char *)new_toot_result_message,
                 sizeof(new_toot_result_message), &err);
-
+                
+  EXPECT_EQ(1, toot->refCount);
   EXPECT_EQ(OPEND, toot->state);
 
   destroy_device_manager(&device_manager);

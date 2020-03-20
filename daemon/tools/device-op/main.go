@@ -8,21 +8,34 @@ import (
 	"github.com/ikihiki/cremona/daemon/internal/driver"
 )
 
+type Config struct{
+	name string
+}
+
+func (config *Config) GetDeviceName() string{
+	return config.name
+}
+
+
 func main() {
 	port := flag.Int("port", 17, "port")
 	name := flag.String("name", "test_device", "name of divice")
 	flag.Parse()
 
-	driver, err := driver.NewDriver(*port, nil)
-	if err != nil {
-		panic(err)
-	}
-	device, err := driver.CreateDevice(*name)
+	config := &Config{name: *name}
+
+	connection := driver.NewConnection(*port)
+	err := connection.Connect()
 	if err != nil {
 		panic(err)
 	}
 
-	stats, _ := driver.GetStats()
+	device, err := driver.NewDevice(connection, config, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	stats, _ := driver.GetDriverStats(connection)
 	fmt.Printf("%#v\n", stats)
 
 	file, err := os.Stat("/dev/crmna_test_device")

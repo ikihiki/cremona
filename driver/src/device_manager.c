@@ -243,6 +243,52 @@ end:
   return result;
 }
 
+bool add_toot_text_result_message(cremona_device_manager_t *device_manager,
+                              uint32_t pid, char *buf, size_t buf_size,
+                              crmna_err_t *error) {
+  add_toot_text_result_t msg;
+  bool result = true;
+  cremona_device_t *device = NULL;
+  cremona_toot_t *toot = NULL;
+
+  if (!deserialize_add_toot_text_result(buf, buf_size, &msg)) {
+    LOG_AND_WRITE_ERROR(device_manager, error,
+                        "Cannot deserialize message. pid: %d", pid);
+    result = false;
+    goto end;
+  }
+
+  device = cremna_get_device(device_manager, msg.device_id);
+  if (device == NULL) {
+    LOG_AND_WRITE_ERROR(device_manager, error, "Cannot find device. id: %llu",
+                        msg.device_id);
+    result = false;
+    goto end;
+  }
+
+  toot = cremna_get_toot(device, msg.toot_id);
+  if (toot == NULL) {
+    LOG_AND_WRITE_ERROR(device_manager, error, "Cannot find toot. id: %llu",
+                        msg.toot_id);
+    result = false;
+    goto end;
+  }
+
+  if (!recive_add_toot_text_result(toot, &msg, error)) {
+    LOG_AND_WRITE_ERROR(device_manager, error,
+                        "Failed add toot text. device id: %llu toot id: %llu",
+                        msg.device_id, msg.toot_id);
+    result = false;
+    goto end;
+  }
+
+end:
+  release_toot(toot);
+  release_device(device);
+
+  return result;
+}
+
 bool reciveMessage(cremona_device_manager_t *device_manager, uint32_t pid,
                    int type, char *buf, size_t buf_size, crmna_err_t *error) {
   switch (type) {
@@ -256,6 +302,9 @@ bool reciveMessage(cremona_device_manager_t *device_manager, uint32_t pid,
     return new_toot_result_message(device_manager, pid, buf, buf_size, error);
   case CRMNA_SEND_TOOT_RESULT:
     return send_toot_result_message(device_manager, pid, buf, buf_size, error);
+    case CRMNA_ADD_TOOT_TEXT_RESULT:
+      return add_toot_text_result_message(device_manager, pid, buf, buf_size,
+                                      error);
 
   default:
     LOG_AND_WRITE_ERROR(device_manager, error,

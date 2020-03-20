@@ -41,6 +41,8 @@ cremona_toot_t *create_toot(cremona_device_t *device, crmna_err_t *error) {
   }
 
   toot->id = create_id(device->device_manager);
+  toot->prev_count = 0;
+  toot->send_count = 0;
   toot->refCount = 0;
   toot->state = OPEN_RESULT_WAIT;
   toot->device = add_ref_device(device);
@@ -131,4 +133,51 @@ void release_toot(cremona_toot_t *toot) {
     device_manager->config.toot_callbacks.cleanup_toot(toot);
     LOG_INFO(device_manager, "Toot deallocated. id: %llu", toot->id);
   }
+}
+
+bool add_toot_text(cremona_toot_t *toot, char *text, bool wait,
+                   crmna_err_t *err) {
+  cremona_toot_lock(toot);
+  if (toot->state != OPEND) {
+    LOG_AND_WRITE_ERROR(toot->device->device_manager, err,
+                        "Invalid state. device id: %llu, toot id %llu",
+                        toot->device->id, toot->id);
+    cremona_toot_unlock(toot);
+    return false;
+  }
+
+  toot->state = ADD_TEXT_RESULT_WAIT;
+  toot->send_count = strlen(text);
+  add_toot_text_t add_toot_text = {toot->id, toot->device->id, text};
+  char message[100];
+  int msg_size =
+      serialize_add_toot_text(&add_toot_text, message, sizeof(message));
+  send_message(toot->device->device_manager, toot->device->pid,
+               CRMNA_ADD_TOOT_TEXT, message, msg_size);
+  cremona_toot_unlock(toot);
+
+  if (wait) {
+    wait_toot(toot, WAIT_WRITE);
+  }
+
+  return true;
+}
+
+bool recive_add_toot_text_result(cremona_toot_t *toot,
+                                 add_toot_text_result_t *message,
+                                 crmna_err_t *err) {
+  if (message->result != toot->send_count) {
+    LOG_AND_WRITE_ERROR(toot->device->device_manager, err,
+                        "Add  toot text failed. device: %s toot id: %llu",
+                        toot->device->name, toot->id);
+    toot->state = TOOT_ERROR;
+    return false;
+  }
+  cremona_toot_lock(toot);
+  toot->state = WRITE_COMPLEATE;
+  toot->prev_count = toot->send_count;
+  toot->send_count = 0;
+  notify(toot);
+  cremona_toot_unlock(toot);
+  return true;
 }

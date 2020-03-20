@@ -11,11 +11,12 @@ func main() {
 	port := flag.Int("port", 17, "port")
 	flag.Parse()
 
-	driver, err := driver.NewDriver(*port, nil)
+	connection := driver.NewConnection(*port)
+	err := connection.Connect()
 	if err != nil {
 		panic(err)
 	}
-	stats, err := driver.GetStats()
+	stats, err := driver.GetDriverStats(connection)
 	if err != nil {
 		panic(err)
 	}

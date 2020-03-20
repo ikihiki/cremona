@@ -1,15 +1,15 @@
-package agent_test
+package config_test
 
-import "testing"
+import (
+	"testing"
 
-import "github.com/ikihiki/cremona/daemon/agent"
-
-import "github.com/stretchr/testify/assert"
+	"github.com/ikihiki/cremona/daemon/internal/config"
+	"github.com/stretchr/testify/assert"
+)
 
 
 func TestConfig_LoadConfig(t *testing.T) {
-	configLoad, err := agent.NewConfigLoad("./testdata")
-	config := configLoad.GetConfig()
+	config, err := config.LoadConfig("./testdata")
 
 	assert.Nil(t, err)
 	assert.Equal(t, "https://server.com", config.Server)
@@ -17,4 +17,5 @@ func TestConfig_LoadConfig(t *testing.T) {
 	assert.Equal(t, "secret", config.ClientSecret)
 	assert.Equal(t, "name", config.Username)
 	assert.Equal(t, "pass", config.Password)
+	assert.Equal(t, "aa", config.DeviceName)
 }

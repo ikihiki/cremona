@@ -82,6 +82,7 @@ func (conn *Connection) ReciveMessage() (*RecivedMessage, error) {
 		message := conn.pendingMessages[0]
 		conn.pendingMessages[0] = nil
 		conn.pendingMessages = conn.pendingMessages[1:]
+		fmt.Printf("%#v\n", message)
 		return message, nil
 	}
 
@@ -139,6 +140,7 @@ func (conn *Connection) ReciveMessage() (*RecivedMessage, error) {
 	message := conn.pendingMessages[0]
 	conn.pendingMessages[0] = nil
 	conn.pendingMessages = conn.pendingMessages[1:]
+	fmt.Printf("%#v\n", message)
 	return message, nil
 }
 
