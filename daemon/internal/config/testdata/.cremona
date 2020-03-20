@@ -1,0 +1,6 @@
+server: "https://server.com"
+client_id: "client"
+client_secret: "secret"
+username: "name"
+password: "pass"
+device_name: "aa"
