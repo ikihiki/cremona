@@ -13,6 +13,7 @@ import (
 
 type Configrator interface {
 	GetDeviceName() string
+	GetUserId() uint32
 }
 
 type Device struct {
@@ -28,7 +29,8 @@ func NewDevice(connection *Connection, config Configrator, tootManage toot.TootM
 	}
 
 	name := config.GetDeviceName()
-	err := connection.SendMessage(&message.CreateDevice{Name: name})
+	uid := config.GetUserId()
+	err := connection.SendMessage(&message.CreateDevice{Name: name, Uid: uid})
 	if err != nil {
 		return nil, err
 	}

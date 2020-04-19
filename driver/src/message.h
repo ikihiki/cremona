@@ -27,6 +27,7 @@ size_t serialize_get_stats_result(const get_stats_result_t *data, char *dest,
 #define CRMNA_CREATE_DEVICE_RESULT (NLMSG_MIN_TYPE * 5)
 typedef struct create_device {
   char name[50];
+  uint32_t uid;
 } create_device_t;
 typedef struct create_device_result {
   uint64_t id;

@@ -9,6 +9,7 @@ import (
 
 type CreateDevice struct {
 	Name string
+	Uid uint32
 }
 
 func (this *CreateDevice) GetMessageTypeId() uint16 {
@@ -22,7 +23,7 @@ func (message *CreateDevice) Len() int {
 	buff := new(bytes.Buffer)
 	encoder := msgpack.NewEncoder(buff)
 	encoder.UseCompactEncoding(true)
-	encoder.Encode([]interface{}{message.Name})
+	encoder.Encode([]interface{}{message.Name, message.Uid})
 	return buff.Len()
 }
 
@@ -30,7 +31,7 @@ func (message *CreateDevice) Serialize() []byte {
 	buff := new(bytes.Buffer)
 	encoder := msgpack.NewEncoder(buff)
 	encoder.UseCompactEncoding(true)
-	encoder.Encode([]interface{}{message.Name})
+	encoder.Encode([]interface{}{message.Name, message.Uid})
 	return buff.Bytes()
 }
 

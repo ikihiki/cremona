@@ -8,8 +8,7 @@ void cremona_device_manager_lock(cremona_device_manager_t *device_manager) {
   device_manager->config.devicce_manager_callbacks.lock(device_manager);
 }
 void cremona_device_manager_unlock(cremona_device_manager_t *device_manager) {
-  LOG_ERROR(device_manager, " unlock device manager %p",
-            device_manager);
+  LOG_ERROR(device_manager, " unlock device manager %p", device_manager);
 
   device_manager->config.devicce_manager_callbacks.unlock(device_manager);
 }
@@ -27,12 +26,43 @@ void release_device_manager(cremona_device_manager_t *device_manager) {
 int send_message(cremona_device_manager_t *device_manager, uint32_t pid,
                  int type, char *buf, size_t buf_size) {
   return device_manager->config.devicce_manager_callbacks.send_message(
-      pid, type, buf, buf_size);
+      device_manager, pid, type, buf, buf_size);
 }
 bool init_device_manager(cremona_device_manager_t *device_manager) {
   device_manager->devices = kh_init(dm);
   device_manager->refCount = 0;
   return true;
+}
+
+bool rent_miner_num(cremona_device_manager_t *device_manager,
+                    unsigned int *miner) {
+  cremona_device_manager_lock(device_manager);
+  unsigned int result;
+  LOG_ERROR(device_manager, "rent_miner_num %p", miner);
+
+  if (device_manager->config.devicce_manager_callbacks.rent_miner_num(
+          device_manager, &result)) {
+    LOG_ERROR(device_manager, "rent_miner_num %p %d", miner, result);
+    *miner = result;
+    cremona_device_manager_unlock(device_manager);
+    return true;
+  } else {
+    LOG_ERROR(device_manager, "rent_miner_num %p %d", miner, result);
+    *miner = 0;
+    cremona_device_manager_unlock(device_manager);
+    return false;
+  }
+
+  cremona_device_manager_unlock(device_manager);
+}
+void release_miner_num(cremona_device_manager_t *device_manager,
+                       unsigned int miner) {
+  cremona_device_manager_lock(device_manager);
+
+  device_manager->config.devicce_manager_callbacks.release_miner_num(
+      device_manager, miner);
+
+  cremona_device_manager_unlock(device_manager);
 }
 
 void destroy_device_manager(cremona_device_manager_t *device_manager) {
@@ -85,8 +115,9 @@ static bool create_device_message(cremona_device_manager_t *device_manager,
     return false;
   }
 
-  cremona_device_t *device = create_device(create_id(device_manager), pid,
-                                           data.name, device_manager, error);
+  cremona_device_t *device =
+      create_device(create_id(device_manager), pid, data.uid, data.name,
+                    device_manager, error);
   if (!device) {
     LOG_AND_WRITE_ERROR(device_manager, error, "Cannot create device. pid: %d",
                         pid);
@@ -244,8 +275,8 @@ end:
 }
 
 bool add_toot_text_result_message(cremona_device_manager_t *device_manager,
-                              uint32_t pid, char *buf, size_t buf_size,
-                              crmna_err_t *error) {
+                                  uint32_t pid, char *buf, size_t buf_size,
+                                  crmna_err_t *error) {
   add_toot_text_result_t msg;
   bool result = true;
   cremona_device_t *device = NULL;
@@ -302,9 +333,9 @@ bool reciveMessage(cremona_device_manager_t *device_manager, uint32_t pid,
     return new_toot_result_message(device_manager, pid, buf, buf_size, error);
   case CRMNA_SEND_TOOT_RESULT:
     return send_toot_result_message(device_manager, pid, buf, buf_size, error);
-    case CRMNA_ADD_TOOT_TEXT_RESULT:
-      return add_toot_text_result_message(device_manager, pid, buf, buf_size,
-                                      error);
+  case CRMNA_ADD_TOOT_TEXT_RESULT:
+    return add_toot_text_result_message(device_manager, pid, buf, buf_size,
+                                        error);
 
   default:
     LOG_AND_WRITE_ERROR(device_manager, error,

@@ -13,8 +13,13 @@ void cremona_device_unlock(cremona_device_t *device) {
 }
 
 static cremona_device_t *
-call_create_device_cb(cremona_device_manager_t *device_manager, char *name) {
-  return device_manager->config.device_collbacks.create_device(name);
+call_init_device_cb(cremona_device_manager_t *device_manager, char *name, unsigned int miner) {
+  return device_manager->config.device_collbacks.init_device(device_manager, name, miner);
+}
+
+static bool call_create_device_cb(cremona_device_manager_t *device_manager,
+                                  cremona_device_t *device) {
+  return device_manager->config.device_collbacks.create_device(device);
 }
 
 static bool call_destroy_device_cb(cremona_device_t *device) {
@@ -36,14 +41,18 @@ cremona_device_t *add_ref_device(cremona_device_t *device) {
   return device;
 }
 
-cremona_device_t *create_device(uint64_t id, uint32_t pid, char *name,
+cremona_device_t *create_device(uint64_t id, uint32_t pid, uint32_t uid, char *name,
                                 cremona_device_manager_t *device_manager,
                                 crmna_err_t *error) {
-
-  cremona_device_t *device = call_create_device_cb(device_manager, name);
+  unsigned int miner;
+  if (!rent_miner_num(device_manager , &miner)) {
+    return NULL;
+  }
+    cremona_device_t *device =
+      call_init_device_cb(device_manager, name, miner);
 
   if (device == NULL) {
-    LOG_AND_WRITE_ERROR(device_manager, error, "Cannot create device. pid: %d",
+    LOG_AND_WRITE_ERROR(device_manager, error, "Cannot init device. pid: %d",
                         pid);
     return NULL;
   }
@@ -51,12 +60,23 @@ cremona_device_t *create_device(uint64_t id, uint32_t pid, char *name,
   device->refCount = 0;
   device->id = id;
   device->pid = pid;
+  device->uid = uid;
   device->toots = kh_init(toot);
   memcpy(device->name, name, sizeof(device->name));
   device->device_manager = add_ref_device_manager(device_manager);
 
-  LOG_ERROR(device->device_manager, "Device created. name: %s id: %ld pid: %u",
-            device->name, device->id, device->pid);
+  if(!call_create_device_cb(device_manager, device)){
+    release_device_manager(device_manager);
+    kh_destroy(toot, device->toots);
+    call_destroy_device_cb(device);
+    device_manager->config.device_collbacks.cleanup_device(device);
+    LOG_AND_WRITE_ERROR(device_manager, error, "Cannot create device. pid: %d",
+                        pid);
+    return NULL;
+  }
+
+  LOG_ERROR(device->device_manager, "Device created. name: %s id: %ld pid: %u uid: %u",
+            device->name, device->id, device->pid, device->uid);
 
   return device;
 }

@@ -54,7 +54,7 @@ unload:
 
 load-test: 
 	make load
-	$(GET_STATS)
+	$(GET_STATS) --wait 30
 	make unload
 
 device-test:
@@ -64,12 +64,12 @@ device-test:
 
 toot-test:
 	make load
-	sudo $(TOOT_OC)
+	$(TOOT_OC)
 	make unload
 
 text-test:
 	make load
-	sudo $(SEND_TXT)
+	$(SEND_TXT)
 	make unload
 
 clean:

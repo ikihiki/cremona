@@ -32,7 +32,10 @@ bool deserialize_create_conn(const char *data, size_t length,
   mpack_node_t root = mpack_tree_root(&tree);
   mpack_node_t name = mpack_node_array_at(root, 0);
   mpack_node_copy_utf8_cstr(name, result->name, sizeof(result->name));
-  if (mpack_tree_destroy(&tree) != mpack_ok) {
+  mpack_node_t uid = mpack_node_array_at(root, 1);
+  result->uid = mpack_node_u32(uid);
+  if (mpack_tree_destroy(&tree) != mpack_ok)
+  {
     return false;
   }
   return true;

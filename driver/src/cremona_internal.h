@@ -12,6 +12,9 @@ add_ref_device_manager(cremona_device_manager_t *device_manager);
 void release_device_manager(cremona_device_manager_t *device_manager);
 int send_message(cremona_device_manager_t *device_manager, uint32_t pid,
                  int type, char *buf, size_t buf_size);
+bool rent_miner_num(cremona_device_manager_t *device_manager,
+                    unsigned int *miner);
+void release_miner_num(cremona_device_manager_t *device_manager, unsigned int miner);
 
 // util
 uint64_t create_id(cremona_device_manager_t *device_manager);
@@ -25,7 +28,7 @@ void delete_device(cremona_device_manager_t *device_manager, uint64_t id);
 
 // device
 cremona_device_t *add_ref_device(cremona_device_t *device);
-cremona_device_t *create_device(uint64_t id, uint32_t pid, char *name,
+cremona_device_t *create_device(uint64_t id, uint32_t pid, uint32_t uid, char *name,
                                 cremona_device_manager_t *device_manager,
                                 crmna_err_t *error);
 void cremona_device_lock(cremona_device_t *device);

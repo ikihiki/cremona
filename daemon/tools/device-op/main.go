@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/ikihiki/cremona/daemon/internal/driver"
 )
@@ -15,11 +16,14 @@ type Config struct{
 func (config *Config) GetDeviceName() string{
 	return config.name
 }
-
+func (this *Config) GetUserId() uint32 {
+	return uint32(os.Getuid())
+}
 
 func main() {
 	port := flag.Int("port", 17, "port")
 	name := flag.String("name", "test_device", "name of divice")
+	wait := flag.Uint("wait", 120, "wait sec for destory device ")
 	flag.Parse()
 
 	config := &Config{name: *name}
@@ -45,6 +49,8 @@ func main() {
 	fmt.Printf("%#v\n", file)
 
 	fmt.Printf("%#v\n", device)
+    time.Sleep(time.Second * time.Duration(*wait))
+
 	err = device.DestroyDevice()
 		if err != nil {
 		panic(err)

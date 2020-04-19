@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ikihiki/cremona/daemon/internal/driver"
+	"github.com/ikihiki/cremona/daemon/internal/toot"
 )
 
 type Config struct{
@@ -16,6 +17,15 @@ type Config struct{
 
 func (config *Config) GetDeviceName() string{
 	return config.name
+}
+func (this *Config) GetUserId() uint32 {
+	return uint32(os.Getuid())
+}
+
+type TootSend struct{}
+
+func (this *TootSend) SendToot(toot *toot.Toot) error {
+	return nil
 }
 
 func main() {
@@ -32,7 +42,12 @@ func main() {
 		panic(err)
 	}
 
-	device, err := driver.NewDevice(connection, config, nil)
+	tootManage, err := toot.NewTootManage(config, &TootSend{})
+	if err != nil {
+		panic(err)
+	}
+
+	device, err := driver.NewDevice(connection, config, tootManage)
 	if err != nil {
 		panic(err)
 	}

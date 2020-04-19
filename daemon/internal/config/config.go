@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"os"
 	"path"
 
 	"gopkg.in/yaml.v2"
@@ -47,4 +48,7 @@ func (this *Config) GetPassword() string {
 }
 func (this *Config) GetDeviceName() string {
 	return this.DeviceName
+}
+func (this *Config) GetUserId() uint32 {
+	return uint32(os.Getuid())
 }
