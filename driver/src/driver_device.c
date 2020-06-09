@@ -1,4 +1,5 @@
 #include "header.h"
+#ifdef __KERNEL__
 
 static void crmna_device_lock(cremona_device_t *device) {
   device_context_t *context = container_of(device, device_context_t, cremona);
@@ -78,3 +79,4 @@ void set_device_callbacks(cremona_device_callbacks_t *collbacks) {
   collbacks->destroy_device = &crmna_destroy_device;
   collbacks->cleanup_device = &crmna_cleanup_device;
 }
+#endif

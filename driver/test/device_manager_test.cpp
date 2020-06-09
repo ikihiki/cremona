@@ -1,8 +1,8 @@
-// #include "cremona.h"
-// #include "src/message.h"
-// #include <cstdarg>
-// #include <cstdlib>
-// #include <gtest/gtest.h>
+#include "cremona.h"
+#include "src/message.h"
+#include <cstdarg>
+#include <cstdlib>
+#include <gtest/gtest.h>
 
 // class create_device_mock {
 // public:
@@ -15,7 +15,8 @@
 
 //   static cremona_device_t *create_device_err(char *name) { return NULL; }
 
-//   static int send_message(uint32_t pid, int type, char *buf, size_t buf_size) {
+//   static int send_message(uint32_t pid, int type, char *buf, size_t buf_size)
+//   {
 //     return 0;
 //   }
 
@@ -117,23 +118,6 @@
 //   destroy_device_manager(&device_manager);
 // }
 
-// TEST(device_manager, create_device_fail_create_callback) {
-//   cremona_device_manager device_manager;
-//   create_device_manager(&device_manager);
-//   device_manager.config.device_collbacks.create_device =
-//       &create_device_mock::create_device_err;
-//   init_device_manager(&device_manager);
-//   char *name = "test_device";
-//   unsigned char message[] = {0x91, 0xab, 0x74, 0x65, 0x73, 0x74, 0x5f,
-//                              0x64, 0x65, 0x76, 0x69, 0x63, 0x65};
-//   char error_msg[100];
-//   crmna_err_t err = {.error_msg = error_msg,
-//                      .error_msg_len = sizeof(error_msg)};
+TEST(device_manager, create_device_fail_create_callback) {
 
-//   int result = reciveMessage(&device_manager, 100, CRMNA_CREATE_DEVICE,
-//                              (char *)message, sizeof(message), &err);
-
-//   EXPECT_FALSE(result);
-//   EXPECT_STREQ("Cannot create device. pid: 100", error_msg);
-//   destroy_device_manager(&device_manager);
-// }
+}

@@ -1,4 +1,5 @@
 #include "header.h"
+#ifdef __KERNEL__
 
 static device_manager_context_t *_context;
 
@@ -183,3 +184,5 @@ void destroy_device_manager_context(device_manager_context_t *context) {
   netlink_kernel_release(context->nl_sock);
   _context = NULL;
 }
+
+#endif

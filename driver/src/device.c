@@ -61,13 +61,12 @@ cremona_device_t *create_device(uint64_t id, uint32_t pid, uint32_t uid, char *n
   device->id = id;
   device->pid = pid;
   device->uid = uid;
-  device->toots = kh_init(toot);
+  //device->toots = kh_init(toot);
   memcpy(device->name, name, sizeof(device->name));
   device->device_manager = add_ref_device_manager(device_manager);
 
   if(!call_create_device_cb(device_manager, device)){
     release_device_manager(device_manager);
-    kh_destroy(toot, device->toots);
     call_destroy_device_cb(device);
     device_manager->config.device_collbacks.cleanup_device(device);
     LOG_AND_WRITE_ERROR(device_manager, error, "Cannot create device. pid: %d",
@@ -82,7 +81,6 @@ cremona_device_t *create_device(uint64_t id, uint32_t pid, uint32_t uid, char *n
 }
 
 bool destroy_device(cremona_device_t *device, crmna_err_t *error) {
-  khint_t k;
 
   cremona_device_lock(device);
 
@@ -90,15 +88,15 @@ bool destroy_device(cremona_device_t *device, crmna_err_t *error) {
   device->isDestroied = true;
 
   bool toot_destroy_result = true;
-  for (k = kh_begin(device->toots); k != kh_end(device->toots); ++k) {
-    if (kh_exist(device->toots, k)) {
-      if (!destroy_toot(kh_value(device->toots, k), error)) {
-        LOG_ERROR(device->device_manager, "Destroy Error error: %s",
-                  error->error_msg);
-        toot_destroy_result = false;
-      }
-    }
-  }
+  // for (k = kh_begin(device->toots); k != kh_end(device->toots); ++k) {
+  //   if (kh_exist(device->toots, k)) {
+  //     if (!destroy_toot(kh_value(device->toots, k), error)) {
+  //       LOG_ERROR(device->device_manager, "Destroy Error error: %s",
+  //                 error->error_msg);
+  //       toot_destroy_result = false;
+  //     }
+  //   }
+  // }
   LOG_AND_WRITE_ERROR(device->device_manager, error,
                       "Destroy toot error: device id: %llu", device->id);
 
@@ -138,7 +136,6 @@ void release_device(cremona_device_t *device) {
                device->id, device->pid, device->refCount);
     }
     release_device_manager(device->device_manager);
-    kh_destroy(toot, device->toots);
     device_manager->config.device_collbacks.cleanup_device(device);
     LOG_INFO(device_manager, "Device deallocated. name: %s id: %llu",
              device->name, device->id);

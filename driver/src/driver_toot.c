@@ -1,4 +1,5 @@
 #include "header.h"
+#ifdef __KERNEL__
 
 static void crmna_toot_lock(cremona_toot_t *toot) {
   toot_context_t *context = container_of(toot, toot_context_t, cremona);
@@ -193,3 +194,4 @@ void set_toot_callbacks(cremona_toot_callbacks_t *callbacks){
   callbacks->destroy_toot = &crmna_toot_destroy_toot;
   callbacks->cleanup_toot = &crmna_toot_cleanup_toot;
 }
+#endif

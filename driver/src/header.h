@@ -1,5 +1,7 @@
 #ifndef __HEADER__
 #define __HEADER__
+#ifdef __KERNEL__
+
 #include <linux/cdev.h>
 #include <linux/fs.h>
 #include <linux/init.h>
@@ -54,4 +56,5 @@ bool create_device_manager_cntext(
 
 void destroy_device_manager_context(device_manager_context_t *context);
 
+#endif
 #endif

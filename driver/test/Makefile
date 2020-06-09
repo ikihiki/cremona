@@ -6,24 +6,25 @@ TEST_INCLUDE = $(INCLUDE) -I.. -Itest -I../third_party/googletest/googletest/inc
 TEST_LDFLAGS = $(LDFLAGS) -L../third_party/googletest/lib -lgtest -lgtest_main -lpthread 
 TRGETDIR     = ./bin
 TARGET       = $(TRGETDIR)/driver_test
-SRCDIR       = ../src
+SRCROOT       = ../src
 TESTDIR      = .
-SOURCES      = $(filter-out %/main.c, $(wildcard $(SRCDIR)/*.c))
+SRCDIRS      := $(shell find $(SRCROOT) -type d)
+SOURCES      = $(filter-out %/main.c, $(foreach dir, $(SRCDIRS), $(wildcard $(dir)/*.c)))
 TESTS        = $(wildcard $(TESTDIR)/*.cpp)
-OBJDIR       = ./obj
-OBJECTS      = $(addprefix $(OBJDIR)/, $(notdir $(SOURCES:.c=.o)))
-TESTOBJECTS  = $(addprefix $(OBJDIR)/, $(notdir $(TESTS:.cpp=.o)))
+OBJROOT      = ./obj
+OBJECTS      = $(addprefix $(OBJROOT)/, $(SOURCES:$(SRCROOT)/%.c=%.o)) 
+OBJDIRS      = $(addprefix $(OBJROOT)/, $(SRCDIRS)) 
+TESTOBJECTS  = $(addprefix $(OBJROOT)/, $(notdir $(TESTS:.cpp=.o)))
 DEPENDS   = $(OBJECTS:.o=.d)
 
 $(TARGET): $(TESTOBJECTS) $(OBJECTS) $(LIBS) 
-	-mkdir -p $(TRGETDIR)
 	$(COMPILER) -o $@ $^ $(TEST_LDFLAGS)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
-	-mkdir -p $(OBJDIR)
+$(OBJROOT)/%.o: $(SRCROOT)/%.c
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(COMPILER) $(CFLAGS) $(INCLUDE) -o $@ -c "$(abspath $<)"
 
-$(OBJDIR)/%.o: $(TESTDIR)/%.cpp
+$(OBJROOT)/%.o: $(TESTDIR)/%.cpp
 	-mkdir -p $(OBJDIR)
 	$(COMPILER) $(CFLAGS) $(TEST_INCLUDE) -o $@ -c "$(abspath $<)"
 
@@ -35,3 +36,8 @@ clean:
 run: $(TARGET) 
 	-$(TARGET)
 .PHONY: run
+
+test:
+	$(warning SOURCES = $(SOURCES))
+	$(warning OBJECTS = $(OBJECTS))
+.PHONY: test

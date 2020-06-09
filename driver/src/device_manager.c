@@ -28,8 +28,21 @@ int send_message(cremona_device_manager_t *device_manager, uint32_t pid,
   return device_manager->config.devicce_manager_callbacks.send_message(
       device_manager, pid, type, buf, buf_size);
 }
-bool init_device_manager(cremona_device_manager_t *device_manager) {
-  device_manager->devices = kh_init(dm);
+bool init_device_manager(cremona_device_manager_t *device_manager,
+                         communicator_factory_t *communicator_factory,
+                         locker_factory_t *locker_factory,
+                         id_mapper_factory_t *id_mapper_factory,
+                         waiter_factory_t *waiter_factory, crmna_err_t *err) {
+  if (!create_communicator(communicator_factory, &device_manager->comm, err))
+    return false;
+  if (!create_locker(locker_factory, &device_manager->lock, err))
+    return false;
+  if (!create_id_mapper(id_mapper_factory, &device_manager->devices, err))
+    return false;
+
+  device_manager->locker_factory = locker_factory;
+  device_manager->id_mapper_factory = id_mapper_factory;
+  device_manager->waiter_factory = waiter_factory;
   device_manager->refCount = 0;
   return true;
 }
@@ -65,38 +78,74 @@ void release_miner_num(cremona_device_manager_t *device_manager,
   cremona_device_manager_unlock(device_manager);
 }
 
-void destroy_device_manager(cremona_device_manager_t *device_manager) {
-  khint_t k;
-  char error_msg[100];
-  crmna_err_t err = {.error_msg = error_msg,
-                     .error_msg_len = sizeof(error_msg)};
+bool destroy_device_manager(cremona_device_manager_t *device_manager,
+                            crmna_err_t *err) {
 
-  device_manager->config.devicce_manager_callbacks.lock(device_manager);
-  for (k = kh_begin(device_manager->devices);
-       k != kh_end(device_manager->devices); ++k) {
-    if (kh_exist(device_manager->devices, k)) {
-      if (!destroy_device(kh_value(device_manager->devices, k), &err)) {
-        LOG_ERROR(device_manager, "Destroy Error error: %s", error_msg);
-      }
+  if (!locker_lock(&device_manager->lock, err))
+    return false;
+
+  id_mapper_iterator_ref_t iterator;
+  cremona_device_t *device;
+  if (!id_mapper_get_iterator(&device_manager->devices, &iterator, err)) {
+    locker_unlock(&device_manager->lock, err);
+    return false;
+  }
+
+  while (id_mapper_iterator_next(&iterator, err)) {
+    device = (cremona_device_t *)id_mapper_iterator_get_value(&iterator, err);
+    if (err->error_msg_len != 0) {
+      locker_unlock(&device_manager->lock, err);
+      return false;
+    }
+    if (device == NULL)
+      continue;
+
+    if (!destroy_device(device, err)) {
+      locker_unlock(&device_manager->lock, err);
+      return false;
     }
   }
-  device_manager->config.devicce_manager_callbacks.unlock(device_manager);
 
-  kh_destroy(dm, device_manager->devices);
+  if (err->error_msg_len != 0) {
+    locker_unlock(&device_manager->lock, err);
+    return false;
+  }
+
+  if (id_mapper_iterator_free(&iterator, err) != 0) {
+    locker_unlock(&device_manager->lock, err);
+    return false;
+  }
+
+  if (id_mapper_free(&device_manager->devices, err) != 0) {
+    locker_unlock(&device_manager->lock, err);
+    return false;
+  }
+
+  if (!communicator_free(&device_manager->comm, err)) {
+    return false;
+  }
+
+  if (!locker_unlock(&device_manager->lock, err)) {
+    return false;
+  }
+
+  if (!locker_free(&device_manager->lock, err)) {
+    return false;
+  }
+  return true;
 }
 
 bool get_stats(cremona_device_manager_t *device_manager, uint32_t pid) {
   get_stats_result_t result;
   result.total_device_count = 0;
-  khint_t k;
 
   device_manager->config.devicce_manager_callbacks.lock(device_manager);
-  for (k = kh_begin(device_manager->devices);
-       k != kh_end(device_manager->devices); ++k) {
-    if (kh_exist(device_manager->devices, k)) {
-      result.total_device_count++;
-    }
-  }
+  // for (k = kh_begin(device_manager->devices);
+  //      k != kh_end(device_manager->devices); ++k) {
+  //   if (kh_exist(device_manager->devices, k)) {
+  //     result.total_device_count++;
+  //   }
+  // }
   device_manager->config.devicce_manager_callbacks.unlock(device_manager);
 
   char message[100];
