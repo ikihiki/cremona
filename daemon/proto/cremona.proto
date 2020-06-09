@@ -1,0 +1,40 @@
+syntax="proto3";
+
+service Agent {
+  rpc Started(AgentIdentity) returns (Empty) {}
+  rpc Error(AgentErrorMessage) returns (Empty){}
+  rpc HealthCheck(stream AgentHealthResponse) returns (stream AgentHealthReqest){}
+}
+
+message AgentIdentity {
+  string uid = 1;
+  string token = 2;
+}
+message Empty {}
+
+message AgentErrorMessage { 
+  AgentIdentity identity = 1;
+  string error = 2;
+}
+
+message AgentHealthResponse { 
+  AgentIdentity identity = 1;
+  uint64 round = 2;
+}
+
+message AgentHealthReqest{ 
+  AgentIdentity identity = 1;
+  uint64 round = 2;
+}
+
+service Info {
+  rpc ActiveAgents(Empty) returns (ActiveAgentsResponse);
+}
+
+message ActiveAgentsResponse {
+  repeated AgentInfo agents = 1;
+}
+
+message AgentInfo {
+  
+}
