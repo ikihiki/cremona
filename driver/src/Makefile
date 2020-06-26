@@ -5,8 +5,8 @@ cremona-y += interfaces/allocator.o interfaces/communicator.o interfaces/communi
 ccflags-y := -DMPACK_HAS_CONFIG -std=gnu99 -Wno-declaration-after-statement
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
-BUILD_DIR ?= $(CURDIR)/../../build/driver
-BUILD_DIR_MAKEFILE ?= $(CURDIR)/../../build/driver/Makefile
+BUILD_DIR ?= $(CURDIR)/../../build/driver/module
+BUILD_DIR_MAKEFILE ?= $(CURDIR)/../../build/driver/module/Makefile
 
 default: $(BUILD_DIR_MAKEFILE)
 	make -C $(KDIR) M=$(BUILD_DIR) src=$(CURDIR) modules

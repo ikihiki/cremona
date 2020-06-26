@@ -4,7 +4,7 @@ LIBS         =
 INCLUDE      = -I../src 
 TEST_INCLUDE = $(INCLUDE) -I.. -Itest -I../third_party/googletest/googletest/include -I../third_party/googletest/googlemock/include 
 TEST_LDFLAGS = $(LDFLAGS) -L../third_party/googletest/lib -lgtest -lgmock -lgmock_main -lpthread 
-TRGETDIR     = ./bin
+TRGETDIR     = $(CURDIR)/../../build/driver/test/bin
 TARGET       = $(TRGETDIR)/driver_test
 SRCROOT      = ../src
 TESTROOT     = .
@@ -12,7 +12,7 @@ SRCDIRS     := $(shell find $(SRCROOT) -type d)
 SOURCES      = $(filter-out %/main.c, $(foreach dir, $(SRCDIRS), $(wildcard $(dir)/*.c)))
 TESTDIRS    := $(shell find $(TESTROOT) -type d)
 TESTS        = $(foreach dir, $(TESTDIRS), $(wildcard $(dir)/*.cpp))
-OBJROOT      = ./obj
+OBJROOT      = $(CURDIR)/../../build/driver/test/obj
 OBJECTS      = $(addprefix $(OBJROOT)/, $(SOURCES:$(SRCROOT)/%.c=%.o)) 
 OBJDIRS      = $(addprefix $(OBJROOT)/, $(SRCDIRS)) 
 TESTOBJECTS  = $(addprefix $(OBJROOT)/, $(TESTS:$(TESTROOT)/%.cpp=%.o)) 
@@ -20,6 +20,7 @@ TESTOBJDIRS  = $(addprefix $(OBJROOT)/, $(TESTDIRS))
 DEPENDS      = $(OBJECTS:.o=.d)
 
 $(TARGET): $(TESTOBJECTS) $(OBJECTS) $(LIBS) 
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(COMPILER) -o $@ $^ $(TEST_LDFLAGS)
 
 $(OBJROOT)/%.o: $(SRCROOT)/%.c

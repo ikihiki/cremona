@@ -19,5 +19,5 @@ watch:
 		echo build start; \
 		make build-driver; \
 		make build-test; \
-		inotifywait -r -e modify --include "\.(c|cpp|h)" ./; \
+		inotifywait -r -e modify ./; \
 	done
