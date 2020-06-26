@@ -11,7 +11,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #endif
+
+typedef enum cremona_error_level { ERROR, WARN, INFO } cremona_error_level_t;
 
 typedef struct crmna_err {
   char *error_msg;
@@ -22,5 +25,8 @@ typedef struct crmna_buf {
   char *buf;
   size_t buf_size;
 } crmna_buf_t;
+
+typedef struct cremona_device_manager cremona_device_manager_t;
+typedef struct cremona_device cremona_device_t;
 
 #endif

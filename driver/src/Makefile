@@ -1,5 +1,6 @@
 obj-m += cremona.o
-cremona-objs := main.o driver_device_manager.o driver_device.o driver_toot.o mpack.o serializer.o device_manager.o device_map.o device.o util.o toot_map.o toot.o 
+cremona-y :=  main.o driver_device_manager.o driver_device.o driver_toot.o mpack.o serializer.o device_manager.o device.o util.o toot_map.o toot.o
+cremona-y += interfaces/allocator.o interfaces/communicator.o interfaces/communicator_factory.o interfaces/id_mapper.o interfaces/id_mapper_factory.o interfaces/locker.o interfaces/locker_factory.o interfaces/waiter.o interfaces/waiter_factory.o
 
 ccflags-y := -DMPACK_HAS_CONFIG -std=gnu99 -Wno-declaration-after-statement
 
@@ -12,6 +13,7 @@ default: $(BUILD_DIR_MAKEFILE)
 
 $(BUILD_DIR):
 	mkdir -p "$@"
+	mkdir -p "$@/interfaces"
 
 $(BUILD_DIR_MAKEFILE): $(BUILD_DIR)
 	touch "$@"

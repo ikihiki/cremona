@@ -2,36 +2,17 @@
 #define __CREMONA_HEADER__
 
 #include "common.h"
+#include "interfaces/allocator.h"
 #include "interfaces/commuinicator.h"
+#include "interfaces/communicator_factory.h"
+#include "interfaces/device_file_factory.h"
 #include "interfaces/id_mapper.h"
+#include "interfaces/id_mapper_factory.h"
 #include "interfaces/locker.h"
+#include "interfaces/locker_factory.h"
+#include "interfaces/logger.h"
 #include "interfaces/waiter.h"
-
-
-typedef enum cremona_error_level { ERROR, WARN, INFO } cremona_error_level_t;
-
-#define LOG_IMPL(device_manager, error, fmt, ...)                              \
-  (device_manager->config.devicce_manager_callbacks.log(                       \
-      error, "Cremona: %s: " fmt "\n", __func__, __VA_ARGS__))
-
-#define LOG_ERROR(device_manager, fmt, ...)                                    \
-  LOG_IMPL(device_manager, ERROR, fmt, __VA_ARGS__)
-
-#define LOG_WARN(device_manager, fmt, ...)                                     \
-  LOG_IMPL(device_manager, WARN, fmt, __VA_ARGS__)
-
-#define LOG_INFO(device_manager, fmt, ...)                                     \
-  LOG_IMPL(device_manager, INFO, fmt, __VA_ARGS__)
-
-#define LOG_AND_WRITE_ERROR(device_manager, crmna_err, fmt, ...)               \
-  {                                                                            \
-    LOG_ERROR(device_manager, fmt, __VA_ARGS__);                               \
-    snprintf(crmna_err->error_msg, crmna_err->error_msg_len, fmt,              \
-             __VA_ARGS__);                                                     \
-  }
-
-typedef struct cremona_device_manager cremona_device_manager_t;
-typedef struct cremona_device cremona_device_t;
+#include "interfaces/waiter_factory.h"
 
 
 typedef enum toot_state {
@@ -59,6 +40,7 @@ typedef struct cremona_toot {
   int prev_count;
   int send_count;
   int refCount;
+  logger *logger_ref;
 } cremona_toot_t;
 
 typedef struct cremona_toot_callbacks {
@@ -73,13 +55,21 @@ typedef struct cremona_toot_callbacks {
 
 typedef struct cremona_device {
   char name[50];
-  uint64_t id;
+  int miner;
   uint32_t pid;
   uint32_t uid;
   bool isDestroied;
   int refCount;
-  id_mapper_ref_t toots;
-  cremona_device_manager_t *device_manager;
+  id_mapper_ref toots;
+  locker_ref lock;
+  device_file_ref device_file;
+  communicator_ref *comm;
+  locker_factory_ref *locker_factory;
+  id_mapper_factory_ref *id_mapper_factory;
+  waiter_factory_ref *waiter_factory;
+
+  logger *logger_ref;
+  allocator_ref *alloc;
 } cremona_device_t;
 
 typedef struct cremona_device_callbacks {
@@ -117,25 +107,32 @@ typedef struct cremona_device_manager_config {
 typedef struct cremona_device_manager {
   cremona_device_manager_config_t config;
   int refCount;
-  id_mapper_ref_t devices;
-  locker_ref_t lock;
-  communicator_ref_t comm;
-  locker_factory_t *locker_factory;
-  id_mapper_factory_t *id_mapper_factory;
-  waiter_factory_t *waiter_factory;
+  id_mapper_ref devices;
+  locker_ref lock;
+  communicator_ref comm;
+  locker_factory_ref *locker_factory;
+  id_mapper_factory_ref *id_mapper_factory;
+  waiter_factory_ref *waiter_factory;
+  device_file_factory_ref *device_file_factory;
+  logger *logger_ref;
+  allocator_ref *alloc;
+  int driver_number_min;
+  int driver_number_max;
 } cremona_device_manager_t;
 
 bool init_device_manager(cremona_device_manager_t *device_manager,
-                         communicator_factory_t *communicator_factory,
-                         locker_factory_t *locker_factory,
-                         id_mapper_factory_t *id_mapper_factory,
-                         waiter_factory_t *waiter_factory,
+                         int driver_number_min, int driver_number_max,
+                         communicator_factory_ref *communicator_factory,
+                         locker_factory_ref *locker_factory,
+                         id_mapper_factory_ref *id_mapper_factory,
+                         waiter_factory_ref *waiter_factory,
+                         device_file_factory_ref *device_file_factory,
+                         logger *logger, allocator_ref *alloc,
                          crmna_err_t *err);
-bool destroy_device_manager(cremona_device_manager_t *device_manager, crmna_err_t *err);
-
-bool reciveMessage(cremona_device_manager_t *device_manager, uint32_t pid,
-                   int type, char *buf, size_t buf_size, crmna_err_t *error);
-
+bool destroy_device_manager(cremona_device_manager_t *device_manager,
+                            crmna_err_t *err);
+bool reciveMessage(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
+                   crmna_err_t *error);
 void *cremona_malloc(cremona_device_manager_t *device_manager, int size);
 
 cremona_device_t *get_cremona_device(cremona_device_manager_t *device_manager,
@@ -149,14 +146,5 @@ bool close_toot(cremona_toot_t *toot, crmna_err_t *err);
 
 bool add_toot_text(cremona_toot_t *toot, char *text, bool wait,
                    crmna_err_t *err);
-
-
-
-
-
-
-typedef struct logger {
-  void (*log)(cremona_error_level_t level, char *fmt, ...);
-} logger_t;
 
 #endif

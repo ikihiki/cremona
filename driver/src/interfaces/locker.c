@@ -1,91 +1,81 @@
 #include "locker.h"
 
-bool locker_lock(locker_ref_t *ref, crmna_err_t *err) {
+bool locker_lock(locker_ref *ref, crmna_err_t *err) {
   if (ref == NULL) {
-    err->error_msg = "reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface == NULL) {
-    err->error_msg = "interface is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->obj == NULL) {
-    err->error_msg = "interface reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface->lock == NULL) {
-    err->error_msg = "function pointer \"lock\" is null";
+    snprintf(err->error_msg, err->error_msg_len,
+            "function pointer \"lock\" is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   return ref->interface->lock(ref->obj, err);
 }
 
-bool locker_unlock(locker_ref_t *ref, crmna_err_t *err) {
+bool locker_unlock(locker_ref *ref, crmna_err_t *err) {
   if (ref == NULL) {
-    err->error_msg = "reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface == NULL) {
-    err->error_msg = "interface is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->obj == NULL) {
-    err->error_msg = "interface reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface->unlock == NULL) {
-    err->error_msg = "function pointer \"unlock\" is null";
+    snprintf(err->error_msg, err->error_msg_len,
+            "function pointer \"unlock\" is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   return ref->interface->unlock(ref->obj, err);
 }
 
-bool locker_free(locker_ref_t *ref, crmna_err_t *err) {
+bool locker_free(locker_ref *ref, crmna_err_t *err) {
   if (ref == NULL) {
-    err->error_msg = "reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface == NULL) {
-    err->error_msg = "interface is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->obj == NULL) {
-    err->error_msg = "interface reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface->free == NULL) {
-    err->error_msg = "function pointer \"free\" is null";
+    snprintf(err->error_msg, err->error_msg_len,
+            "function pointer \"free\" is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   return ref->interface->free(ref->obj, err);
 }
 
-bool create_locker(locker_factory_t *factory, locker_ref_t *ref,
-                          crmna_err_t *err) {
-  if (factory == NULL) {
-    err->error_msg = "factory is null";
-    err->error_msg_len = strlen(err->error_msg);
-    return false;
-  }
-  if (ref == NULL) {
-    err->error_msg = "output target reference is null";
-    err->error_msg_len = strlen(err->error_msg);
-    return false;
-  }
+void clear_locker_ref(locker_ref *ref) {
   ref->interface = NULL;
   ref->obj = NULL;
-
-  return factory->create_locker(ref, err);
 }

@@ -1,91 +1,80 @@
 #include "waiter.h"
 
-bool waiter_wait(waiter_ref_t *ref, crmna_err_t *err) {
+bool waiter_wait(waiter_ref *ref, crmna_err_t *err) {
   if (ref == NULL) {
-    err->error_msg = "reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface == NULL) {
-    err->error_msg = "interface is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->obj == NULL) {
-    err->error_msg = "interface reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface->wait == NULL) {
-    err->error_msg = "function pointer \"wait\" is null";
+    snprintf(err->error_msg, err->error_msg_len,
+            "function pointer \"wait\" is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   return ref->interface->wait(ref->obj, err);
 }
 
-bool waiter_notify(waiter_ref_t *ref, crmna_err_t *err) {
+bool waiter_notify(waiter_ref *ref, crmna_err_t *err) {
   if (ref == NULL) {
-    err->error_msg = "reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface == NULL) {
-    err->error_msg = "interface is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->obj == NULL) {
-    err->error_msg = "interface reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface->notify == NULL) {
-    err->error_msg = "function pointer \"notify\" is null";
+    snprintf(err->error_msg, err->error_msg_len,
+            "function pointer \"notify\" is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   return ref->interface->notify(ref->obj, err);
 }
 
-bool waiter_free(waiter_ref_t *ref, crmna_err_t *err) {
+bool waiter_free(waiter_ref *ref, crmna_err_t *err) {
   if (ref == NULL) {
-    err->error_msg = "reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface == NULL) {
-    err->error_msg = "interface is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->obj == NULL) {
-    err->error_msg = "interface reference is null";
+    snprintf(err->error_msg, err->error_msg_len, "interface reference is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   if (ref->interface->free == NULL) {
-    err->error_msg = "function pointer \"free\" is null";
+    snprintf(err->error_msg, err->error_msg_len,
+            "function pointer \"free\" is null");
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
   return ref->interface->free(ref->obj, err);
 }
-
-bool create_waiter(waiter_factory_t *factory, waiter_ref_t *ref,
-                   crmna_err_t *err) {
-  if (factory == NULL) {
-    err->error_msg = "factory is null";
-    err->error_msg_len = strlen(err->error_msg);
-    return false;
-  }
-  if (ref == NULL) {
-    err->error_msg = "output target reference is null";
-    err->error_msg_len = strlen(err->error_msg);
-    return false;
-  }
+void clear_waiter_ref(waiter_ref *ref) {
   ref->interface = NULL;
   ref->obj = NULL;
-
-  return factory->create_waiter(ref, err);
 }

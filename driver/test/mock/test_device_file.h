@@ -1,0 +1,40 @@
+#pragma once
+#include "interfaces/device_file_factory.h"
+#include <gmock/gmock.h>
+
+class test_device_file {
+public:
+  virtual ~test_device_file(){};
+  device_file_ref get_ref();
+  virtual bool free(crmna_err_t *err) = 0;
+
+private:
+  static bool free(void *obj, crmna_err_t *err);
+
+  static device_file interface;
+};
+
+class test_device_file_mock : public test_device_file {
+public:
+  MOCK_METHOD1(free, bool(crmna_err_t *err));
+};
+
+class test_device_file_factory {
+public:
+  virtual ~test_device_file_factory() {}
+  device_file_factory_ref get_factory();
+  virtual bool create_device_file(cremona_device_t *device, device_file_ref *device_file, crmna_err_t *err) = 0;
+
+private:
+  static bool create_device_file(void *obj, cremona_device_t *device,
+                                 device_file_ref *device_file, crmna_err_t *err);
+
+  static device_file_factory interface;
+};
+
+class test_device_file_factory_mock : public test_device_file_factory {
+public:
+  MOCK_METHOD3(create_device_file,
+               bool(cremona_device_t *device, device_file_ref *device_file,
+                    crmna_err_t *err));
+};

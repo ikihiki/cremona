@@ -2,21 +2,17 @@
 #define CRMNA_LOCKER_HEADER
 #include "../common.h"
 
-typedef struct locker {
+typedef struct {
   bool (*lock)(void *obj, crmna_err_t *err);
   bool (*unlock)(void *obj, crmna_err_t *err);
   bool (*free)(void *obj, crmna_err_t *err);
-} locker_t;
+} locker;
 
-typedef struct locker_ref {
-  locker_t *interface;
+typedef struct {
+  locker *interface;
   void *obj;
-} locker_ref_t;
+} locker_ref;
 
-typedef struct locker_factory {
-      bool (*create_locker)(locker_ref_t *lock, crmna_err_t *err);
-
-} locker_factory_t;
 
 /**
  * @fn
@@ -25,7 +21,7 @@ typedef struct locker_factory {
  * @param err エラー
  * @return 取得に成功した場合はtrue。失敗した場合はfalse。
  */
-bool locker_lock(locker_ref_t *ref, crmna_err_t *err);
+bool locker_lock(locker_ref *ref, crmna_err_t *err);
 
 /**
  * @fn
@@ -34,7 +30,7 @@ bool locker_lock(locker_ref_t *ref, crmna_err_t *err);
  * @param err エラー
  * @return 解放に成功した場合はtrue。失敗した場合はfalse。
  */
-bool locker_unlock(locker_ref_t *ref, crmna_err_t *err);
+bool locker_unlock(locker_ref *ref, crmna_err_t *err);
 
 /**
  * @fn
@@ -43,17 +39,13 @@ bool locker_unlock(locker_ref_t *ref, crmna_err_t *err);
  * @param err エラー
  * @return 破棄に成功した場合はtrue。失敗した場合はfalse。
  */
-bool locker_free(locker_ref_t *ref, crmna_err_t *err);
+bool locker_free(locker_ref *ref, crmna_err_t *err);
 
 /**
  * @fn
- * lockerをfactoryから生成します。
- * @param factory 生成に使用するファクトリ
- * @param ref 生成されたlockerのリファレンス
- * @param err エラー
- * @return 成功した場合はtrue。エラーの場合はfalse。
+ * lockerを初期化します。
+ * @param ref インターフェースリファレンス
  */
-bool create_locker(locker_factory_t *factory, locker_ref_t *ref,
-                          crmna_err_t *err);
+void clear_locker_ref(locker_ref *ref);
 
 #endif

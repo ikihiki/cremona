@@ -2,21 +2,16 @@
 #define CRMNA_WAITER_HEADER
 #include "../common.h"
 
-typedef struct waiter {
+typedef struct {
   bool (*wait)(void *obj, crmna_err_t *err);
   bool (*notify)(void *obj, crmna_err_t *err);
   bool (*free)(void *obj, crmna_err_t *err);
-} waiter_t;
+} waiter;
 
-typedef struct waiter_ref {
-  waiter_t *interface;
+typedef struct {
+  waiter *interface;
   void *obj;
-} waiter_ref_t;
-
-typedef struct waiter_factory {
-      bool (*create_waiter)(waiter_ref_t *lock, crmna_err_t *err);
-
-} waiter_factory_t;
+} waiter_ref;
 
 /**
  * @fn
@@ -25,7 +20,7 @@ typedef struct waiter_factory {
  * @param err エラー
  * @return 取得に成功した場合はtrue。失敗した場合はfalse。
  */
-bool waiter_wait(waiter_ref_t *ref, crmna_err_t *err);
+bool waiter_wait(waiter_ref *ref, crmna_err_t *err);
 
 /**
  * @fn
@@ -34,7 +29,7 @@ bool waiter_wait(waiter_ref_t *ref, crmna_err_t *err);
  * @param err エラー
  * @return 解放に成功した場合はtrue。失敗した場合はfalse。
  */
-bool waiter_notify(waiter_ref_t *ref, crmna_err_t *err);
+bool waiter_notify(waiter_ref *ref, crmna_err_t *err);
 
 /**
  * @fn
@@ -43,16 +38,13 @@ bool waiter_notify(waiter_ref_t *ref, crmna_err_t *err);
  * @param err エラー
  * @return 破棄に成功した場合はtrue。失敗した場合はfalse。
  */
-bool waiter_free(waiter_ref_t *ref, crmna_err_t *err);
+bool waiter_free(waiter_ref *ref, crmna_err_t *err);
 
 /**
  * @fn
- * waiterをfactoryから生成します。
- * @param factory 生成に使用するファクトリ
- * @param ref 生成されたwaiterのリファレンス
- * @param err エラー
- * @return 成功した場合はtrue。エラーの場合はfalse。
+ * waiterを初期化します。
+ * @param ref インターフェースリファレンス
  */
-bool create_waiter(waiter_factory_t *factory, waiter_ref_t *ref,
-                          crmna_err_t *err);
+void clear_waiter_ref(waiter_ref *ref);
+
 #endif

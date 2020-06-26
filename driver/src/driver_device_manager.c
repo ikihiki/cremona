@@ -10,10 +10,11 @@ static int my_rcv_msg2(struct sk_buff *skb, struct nlmsghdr *nlh,
     crmna_err_t err = {.error_msg = error_msg,
                        .error_msg_len = sizeof(error_msg)};
 
-    bool result =
-        reciveMessage(&_context->cremona, nlh->nlmsg_pid, nlh->nlmsg_type,
-                      (char *)nlmsg_data(nlh), nlh->nlmsg_len, &err);
-    return result ? 0 : 1;
+    // bool result =
+    //     reciveMessage(&_context->cremona, nlh->nlmsg_pid, nlh->nlmsg_type,
+    //                   (char *)nlmsg_data(nlh), nlh->nlmsg_len, &err);
+    // return result ? 0 : 1;
+    return 0;
 }
 
 static void recive_data(struct sk_buff *skb) {
@@ -166,13 +167,13 @@ bool create_device_manager_cntext(device_manager_context_t *context,
 
   mutex_init(&(context->mutex));
 
-  init_device_manager(&context->cremona);
+  //init_device_manager(&context->cremona);
   _context = context;
 }
 
 void destroy_device_manager_context(device_manager_context_t *context) {
 
-  destroy_device_manager(&context->cremona);
+  //destroy_device_manager(&context->cremona);
   mutex_destroy(&(context->mutex));
 
   class_destroy(context->device_class);

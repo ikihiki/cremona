@@ -1,39 +1,14 @@
 #include "cremona_internal.h"
 #include "message.h"
 
-void cremona_device_lock(cremona_device_t *device) {
-  LOG_ERROR(device->device_manager, " lock %p", device);
-  device->device_manager->config.device_collbacks.lock(device);
-}
-
-void cremona_device_unlock(cremona_device_t *device) {
-  LOG_ERROR(device->device_manager, " unlock %p", device);
-
-  device->device_manager->config.device_collbacks.unlock(device);
-}
-
-static cremona_device_t *
-call_init_device_cb(cremona_device_manager_t *device_manager, char *name, unsigned int miner) {
-  return device_manager->config.device_collbacks.init_device(device_manager, name, miner);
-}
-
-static bool call_create_device_cb(cremona_device_manager_t *device_manager,
-                                  cremona_device_t *device) {
-  return device_manager->config.device_collbacks.create_device(device);
-}
-
-static bool call_destroy_device_cb(cremona_device_t *device) {
-  return device->device_manager->config.device_collbacks.destroy_device(device);
-}
-
 cremona_device_t *add_ref_device(cremona_device_t *device) {
   if (device == NULL) {
     return NULL;
   }
   if (device->isDestroied) {
-    LOG_ERROR(device->device_manager,
+    LOG_ERROR(device->logger_ref,
               "Device already destroyed. device id: %llu, device name: %s",
-              device->id, device->name);
+              device->miner, device->name);
     return NULL;
   }
 
@@ -41,104 +16,104 @@ cremona_device_t *add_ref_device(cremona_device_t *device) {
   return device;
 }
 
-cremona_device_t *create_device(uint64_t id, uint32_t pid, uint32_t uid, char *name,
-                                cremona_device_manager_t *device_manager,
-                                crmna_err_t *error) {
-  unsigned int miner;
-  if (!rent_miner_num(device_manager , &miner)) {
-    return NULL;
-  }
-    cremona_device_t *device =
-      call_init_device_cb(device_manager, name, miner);
+bool init_device(cremona_device_t *device, int miner, uint32_t pid,
+                 uint32_t uid, char *name,
+                 id_mapper_factory_ref *id_mapper_factory,
+                 locker_factory_ref *locker_factory, communicator_ref *comm,
+                 waiter_factory_ref *waiter_factory,
+                 device_file_factory_ref *device_file_factory,
+                 logger *logger_ref, allocator_ref *alloc, crmna_err_t *error) {
 
-  if (device == NULL) {
-    LOG_AND_WRITE_ERROR(device_manager, error, "Cannot init device. pid: %d",
-                        pid);
-    return NULL;
-  }
   device->isDestroied = false;
   device->refCount = 0;
-  device->id = id;
+  device->miner = miner;
   device->pid = pid;
   device->uid = uid;
-  //device->toots = kh_init(toot);
+  device->logger_ref = logger_ref;
+  device->comm = comm;
+  device->id_mapper_factory = id_mapper_factory;
+  device->locker_factory = locker_factory;
+  device->waiter_factory = waiter_factory;
+  device->alloc = alloc;
   memcpy(device->name, name, sizeof(device->name));
-  device->device_manager = add_ref_device_manager(device_manager);
+  clear_id_mapper_ref(&device->toots);
+  clear_locker_ref(&device->lock);
 
-  if(!call_create_device_cb(device_manager, device)){
-    release_device_manager(device_manager);
-    call_destroy_device_cb(device);
-    device_manager->config.device_collbacks.cleanup_device(device);
-    LOG_AND_WRITE_ERROR(device_manager, error, "Cannot create device. pid: %d",
-                        pid);
-    return NULL;
+  if (!create_locker(locker_factory, &device->lock, error)) {
+    destroy_device(device, error);
+    LOG_AND_WRITE_ERROR(logger_ref, error,
+                        "Cannot allocate locker in device. pid: %d", pid);
+    return false;
   }
 
-  LOG_ERROR(device->device_manager, "Device created. name: %s id: %ld pid: %u uid: %u",
-            device->name, device->id, device->pid, device->uid);
+  if (!create_id_mapper(id_mapper_factory, &device->toots, error)) {
+    destroy_device(device, error);
+    LOG_AND_WRITE_ERROR(logger_ref, error,
+                        "Cannot allocate id_mapper in device. pid: %d", pid);
+    return false;
+  }
 
-  return device;
+  if (!create_device_file(device_file_factory, device, &device->device_file,
+                          error)) {
+    destroy_device(device, error);
+    LOG_AND_WRITE_ERROR(logger_ref, error,
+                        "Cannot create device file in device. pid: %d", pid);
+    return false;
+  }
+
+  LOG_INFO(device->logger_ref,
+           "Device created. name: %s id: %ld pid: %u uid: %u", device->name,
+           device->miner, device->pid, device->uid);
+
+  return true;
 }
 
 bool destroy_device(cremona_device_t *device, crmna_err_t *error) {
-
-  cremona_device_lock(device);
-
-  call_destroy_device_cb(device);
   device->isDestroied = true;
+  if (device->device_file.interface != NULL) {
+    device_file_free(&device->device_file, error);
+  }
+  if (device->toots.interface != NULL) {
+    id_mapper_free(&device->toots, error);
+  }
+  if (device->lock.interface != NULL) {
+    locker_free(&device->lock, error);
+  }
+  LOG_INFO(device->logger_ref, "Device destroyed. name: %s id: %ld pid: %u",
+           device->name, device->miner, device->pid);
 
-  bool toot_destroy_result = true;
-  // for (k = kh_begin(device->toots); k != kh_end(device->toots); ++k) {
-  //   if (kh_exist(device->toots, k)) {
-  //     if (!destroy_toot(kh_value(device->toots, k), error)) {
-  //       LOG_ERROR(device->device_manager, "Destroy Error error: %s",
-  //                 error->error_msg);
-  //       toot_destroy_result = false;
-  //     }
-  //   }
-  // }
-  LOG_AND_WRITE_ERROR(device->device_manager, error,
-                      "Destroy toot error: device id: %llu", device->id);
-
-  LOG_INFO(device->device_manager, "Device destroyed. name: %s id: %ld pid: %u",
-           device->name, device->id, device->pid);
-
-  cremona_device_unlock(device);
-  return toot_destroy_result;
+  return true;
 }
 
 void release_device(cremona_device_t *device) {
-  if(device == NULL){
+  if (device == NULL) {
     return;
   }
-  cremona_device_lock(device);
+  // cremona_device_lock(device);
   device->refCount--;
-  cremona_device_unlock(device);
-  cremona_device_manager_t *device_manager = device->device_manager;
+  // cremona_device_unlock(device);
   if (device->refCount <= 0) {
     if (device->refCount < 0) {
       LOG_WARN(
-          device_manager,
+          device->logger_ref,
           "refCount is under 0 {\"id\": %ld, \"pid\": %d, \"refCount\": %d}",
-          device->id, device->pid, device->refCount);
+          device->miner, device->pid, device->refCount);
     }
     if (device->isDestroied == false) {
-      LOG_WARN(device_manager,
+      LOG_WARN(device->logger_ref,
                "not destroied but refCount is less or equal 0. {\"id\": %llu, "
                "\"pid\": %d, \"refCount\": %d}",
-               device->id, device->pid, device->refCount);
+               device->miner, device->pid, device->refCount);
     }
     if (count_toot(device) > 0) {
-      LOG_WARN(device_manager,
+      LOG_WARN(device->logger_ref,
                "toot map is not empty but refCount is less or equal 0. "
                "{\"id\": %llu, "
                "\"pid\": %d, \"refCount\": %d}",
-               device->id, device->pid, device->refCount);
+               device->miner, device->pid, device->refCount);
     }
-    release_device_manager(device->device_manager);
-    device_manager->config.device_collbacks.cleanup_device(device);
-    LOG_INFO(device_manager, "Device deallocated. name: %s id: %llu",
-             device->name, device->id);
+    LOG_INFO(device->logger_ref, "Device deallocated. name: %s id: %llu",
+             device->name, device->miner);
   }
 }
 
@@ -147,9 +122,9 @@ cremona_toot_t *open_toot(cremona_device_t *device, bool wait,
 
   if (device->isDestroied) {
     LOG_AND_WRITE_ERROR(
-        device->device_manager, err,
+        device->logger_ref, err,
         "Device already destroyed. device id: %llu, device name: %s",
-        device->id, device->name);
+        device->miner, device->name);
     return NULL;
   }
 
@@ -161,14 +136,14 @@ cremona_toot_t *open_toot(cremona_device_t *device, bool wait,
 
   add_toot(device, toot);
 
-  new_toot_t new_toot = {toot->id, device->id};
+  new_toot_t new_toot = {toot->id, device->miner};
   char message[100];
   int msg_size = serialize_new_toot(&new_toot, message, sizeof(message));
-  send_message(device->device_manager, device->pid, CRMNA_NEW_TOOT, message,
-               msg_size);
+  // send_message(device->device_manager, device->pid, CRMNA_NEW_TOOT, message,
+  //              msg_size);
 
   if (wait) {
-    wait_toot(toot, WAIT_OPEN);
+    //    wait_toot(toot, WAIT_OPEN);
   }
 
   return add_ref_toot(toot);
@@ -178,9 +153,9 @@ bool recive_close_toot_result(cremona_toot_t *toot, cremona_device_t *device,
                               send_toot_result_t *message, crmna_err_t *error) {
   if (toot->device != device) {
     LOG_AND_WRITE_ERROR(
-        device->device_manager, error,
+        device->logger_ref, error,
         "toot is not in device. device id: %llu, device name: %s toot id: %llu",
-        device->id, device->name, toot->id);
+        device->miner, device->name, toot->id);
     return false;
   }
   destroy_toot(toot, error);
