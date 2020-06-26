@@ -38,6 +38,7 @@ bool init_device(cremona_device_t *device, int miner, uint32_t pid,
   memcpy(device->name, name, sizeof(device->name));
   clear_id_mapper_ref(&device->toots);
   clear_locker_ref(&device->lock);
+  clear_device_file_ref(&device->device_file);
 
   if (!create_locker(locker_factory, &device->lock, error)) {
     destroy_device(device, error);

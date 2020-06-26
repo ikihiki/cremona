@@ -1,4 +1,8 @@
 #include "test_device_file.h"
+using ::testing::_;
+using ::testing::DoAll;
+using ::testing::Invoke;
+using ::testing::Return;
 
 bool test_device_file::free(void *obj, crmna_err_t *err) {
   return ((test_device_file *)obj)->free(err);
@@ -6,8 +10,9 @@ bool test_device_file::free(void *obj, crmna_err_t *err) {
 
 device_file test_device_file::interface = {.free = &test_device_file::free};
 
-device_file_ref test_device_file::get_ref() {
-  return {.interface = &test_device_file::interface, .obj = this};
+void test_device_file::set_ref(device_file_ref *ref) {
+  ref->interface = &test_device_file::interface;
+  ref->obj = this;
 }
 
 bool test_device_file_factory::create_device_file(void *obj,
@@ -23,4 +28,17 @@ device_file_factory test_device_file_factory::interface = {
 
 device_file_factory_ref test_device_file_factory::get_factory() {
   return {.interface = &test_device_file_factory::interface, .obj = this};
+}
+
+test_device_file_factory_mock::test_device_file_factory_mock() {
+  ON_CALL(*this, create_device_file(_, _, _))
+      .WillByDefault(DoAll(Invoke([this](cremona_device_t *,
+                                         device_file_ref *ref, crmna_err_t *) {
+                             if (this->next_mock == 10) {
+                               throw std::runtime_error("overflow mock");
+                             }
+                             this->mocks[this->next_mock].set_ref(ref);
+                             this->next_mock++;
+                           }),
+                           Return(true)));
 }

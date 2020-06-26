@@ -20,4 +20,11 @@ typedef struct {
  */
 bool device_file_free(device_file_ref *ref, crmna_err_t *err);
 
+/**
+ * @fn
+ * idevice_fileを初期化します。
+ * @param ref インターフェースリファレンス
+ */
+void clear_device_file_ref(device_file_ref *ref);
+
 #endif

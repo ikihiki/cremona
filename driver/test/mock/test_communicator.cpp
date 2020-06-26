@@ -1,7 +1,10 @@
 #include <iostream>
 #include <string>
 #include "test_communicator.h"
-
+using ::testing::_;
+using ::testing::DoAll;
+using ::testing::Invoke;
+using ::testing::Return;
 
 int test_communicator::send_message(void *obj, uint32_t pid, int type,
                                     crmna_buf_t *buf, crmna_err_t *err) {
@@ -20,7 +23,12 @@ void test_communicator::set_ref(communicator_ref *ref) {
   ref->obj = this;
 }
 
-communicator_factory_ref test_communicator_factory::get_factory() {
+test_communicator_mock::test_communicator_mock(){
+  ON_CALL(*this, free(_)).WillByDefault(Return(true));
+}
+
+    communicator_factory_ref
+    test_communicator_factory::get_factory() {
   return {.interface = &test_communicator_factory::factory_interface,
           .obj = this};
 }
@@ -34,3 +42,16 @@ bool test_communicator_factory::create_communicator(
   return ((test_communicator_factory *)obj)->create_communicator(device_manager, ref, err);
 }
 
+test_communicator_factory_mock::test_communicator_factory_mock(){
+  ON_CALL(*this, create_communicator(_, _, _))
+      .WillByDefault(
+          DoAll(Invoke([this](cremona_device_manager_t *,
+                              communicator_ref *ref, crmna_err_t *) {
+                  if (this->next_mock == 10) {
+                    throw std::runtime_error("overflow mock");
+                  }
+                  this->mocks[this->next_mock].set_ref(ref);
+                  this->next_mock++;
+                }),
+                Return(true)));
+}

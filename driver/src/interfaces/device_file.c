@@ -24,3 +24,8 @@ bool device_file_free(device_file_ref *ref, crmna_err_t *err){
   }
   return ref->interface->free(ref->obj, err);
 }
+
+void clear_device_file_ref(device_file_ref *ref) { 
+  ref->interface = NULL;
+  ref->obj = NULL;
+}

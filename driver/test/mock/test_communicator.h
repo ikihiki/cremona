@@ -21,6 +21,7 @@ private:
 
 class test_communicator_mock : public test_communicator {
 public:
+  test_communicator_mock();
   MOCK_METHOD4(send_message,
                int(uint32_t pid, int type,
                    crmna_buf_t *buf, crmna_err_t *err));
@@ -43,8 +44,11 @@ private:
 
 class test_communicator_factory_mock : public test_communicator_factory {
 public:
+  test_communicator_factory_mock();
   MOCK_METHOD3(create_communicator,
                bool(cremona_device_manager_t *device_manager,
                     communicator_ref *ref, crmna_err_t *err));
-};
 
+  test_communicator_mock mocks[10];
+  int next_mock = 0;
+};

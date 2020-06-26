@@ -20,6 +20,7 @@ private:
 
 class test_locker_mock : public test_locker {
 public:
+  test_locker_mock();
   MOCK_METHOD1(lock, bool(crmna_err_t *err));
   MOCK_METHOD1(unlock, bool(crmna_err_t *err));
   MOCK_METHOD1(free, bool(crmna_err_t *err));
@@ -39,5 +40,9 @@ private:
 
 class test_locker_factory_mock: public test_locker_factory{
   public:
+    test_locker_factory_mock();
     MOCK_METHOD2(create_locker, bool(locker_ref *lock, crmna_err_t *err));
+
+    test_locker_mock mocks[10];
+    int next_mock = 0;
 };
