@@ -97,10 +97,8 @@ TEST(device_manager, init_device_manager_success) {
 
   test_communicator_factory_mock com_factory_mock;
   auto com_factory = com_factory_mock.get_factory();
-
   test_locker_factory_mock locker_mock;
   auto locker_factory = locker_mock.get_factory();
-
   test_id_mapper_factory_mock id_mock;
   auto id_mapper_factory = id_mock.get_factory();
 

@@ -37,13 +37,12 @@ void test_id_mapper::set_ref(id_mapper_ref *ref) {
 test_id_mapper_mock::test_id_mapper_mock() {
   ON_CALL(*this, free(_)).WillByDefault(Return(true));
   ON_CALL(*this, add_get_id(_, _, _))
-      .WillByDefault(DoAll(Invoke([this](void *target, int *id, crmna_err_t *) {
-                             this->map.insert(
-                                 std::make_pair(this->next_id, target));
-                             *id = this->next_id;
-                             this->next_id++;
-                           }),
-                           Return(true)));
+      .WillByDefault(Invoke([this](void *target, int *id, crmna_err_t *) {
+        this->map.insert(std::make_pair(this->next_id, target));
+        *id = this->next_id;
+        this->next_id++;
+        return true;
+      }));
 }
 
 bool test_id_mapper_factory::create_id_mapper(void *obj, id_mapper_ref *ref,
@@ -62,12 +61,13 @@ id_mapper_factory_ref test_id_mapper_factory::get_factory() {
 test_id_mapper_factory_mock::test_id_mapper_factory_mock() {
   ON_CALL(*this, create_id_mapper(_, _, _, _))
       .WillByDefault(
-          DoAll(Invoke([this](id_mapper_ref *ref, int, int, crmna_err_t *) {
-                  if (this->next_mock == 10) {
-                    throw std::runtime_error("overflow mock");
-                  }
-                  this->mocks[this->next_mock].set_ref(ref);
-                  this->next_mock++;
-                }),
-                Return(true)));
+          Invoke([this](id_mapper_ref *ref, int, int, crmna_err_t *) {
+            if (this->next_mock == 10)
+            {
+              throw std::runtime_error("overflow mock");
+            }
+            this->mocks[this->next_mock].set_ref(ref);
+            this->next_mock++;
+            return true;
+          }));
 }

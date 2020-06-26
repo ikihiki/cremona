@@ -1,4 +1,5 @@
 #pragma once
+#include "cremona.h"
 #include "interfaces/allocator.h"
 #include <gmock/gmock.h>
 
@@ -18,6 +19,12 @@ private:
 
 class test_allocater_mock : public test_allocater {
 public:
+  test_allocater_mock();
   MOCK_METHOD1(allocate, void *(size_t size));
   MOCK_METHOD1(free, void(void *ptr));
+
+  cremona_device_t devices[10];
+  int next_device = 0;
+  cremona_toot_t toots[10];
+  int next_toot = 0;
 };

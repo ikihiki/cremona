@@ -32,13 +32,13 @@ device_file_factory_ref test_device_file_factory::get_factory() {
 
 test_device_file_factory_mock::test_device_file_factory_mock() {
   ON_CALL(*this, create_device_file(_, _, _))
-      .WillByDefault(DoAll(Invoke([this](cremona_device_t *,
-                                         device_file_ref *ref, crmna_err_t *) {
-                             if (this->next_mock == 10) {
-                               throw std::runtime_error("overflow mock");
-                             }
-                             this->mocks[this->next_mock].set_ref(ref);
-                             this->next_mock++;
-                           }),
-                           Return(true)));
+      .WillByDefault(Invoke(
+          [this](cremona_device_t *, device_file_ref *ref, crmna_err_t *) {
+            if (this->next_mock == 10) {
+              throw std::runtime_error("overflow mock");
+            }
+            this->mocks[this->next_mock].set_ref(ref);
+            this->next_mock++;
+            return true;
+          }));
 }
