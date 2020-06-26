@@ -81,6 +81,26 @@
 			"compare": "cpp",
 			"concepts": "cpp",
 			"ranges": "cpp"
-		}
+		},
+		"files.autoSave": "afterDelay",
+		"editor.formatOnSave": true,
+		"editor.formatOnType": true,
+		"[c]": {
+			"editor.defaultFormatter": "xaver.clang-format"
+		},
+		"editor.formatOnPaste": true,
+		"[cpp]": {
+			"editor.defaultFormatter": "xaver.clang-format"
+		},
+		"go.useLanguageServer": true,
+	},
+	"extensions": {
+		"recommendations": [
+			"ms-vscode.cpptools",
+			"matepek.vscode-catch2-test-adapter",
+			"xaver.clang-format",
+			"golang.go",
+			"premparihar.gotestexplorer"
+		]
 	}
 }
