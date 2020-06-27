@@ -75,11 +75,10 @@ TEST(device_manager, init_device_manager_fail_create_id_mapper) {
 
   test_id_mapper_factory_mock id_mock;
   EXPECT_CALL(id_mock, create_id_mapper(_, _, _, _))
-      .WillOnce(DoAll(Invoke([](id_mapper_ref *, int, int, crmna_err_t *err) {
-                        snprintf(err->error_msg, err->error_msg_len,
-                                 "error_id_mapper");
-                      }),
-                      Return(false)));
+      .WillOnce(Invoke([](id_mapper_ref *, int, int, crmna_err_t *err) {
+        snprintf(err->error_msg, err->error_msg_len, "error_id_mapper");
+        return false;
+      }));
   auto id_mapper_factory = id_mock.get_factory();
 
   bool result =

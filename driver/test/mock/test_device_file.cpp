@@ -4,8 +4,8 @@ using ::testing::DoAll;
 using ::testing::Invoke;
 using ::testing::Return;
 
-bool test_device_file::free(void *obj, crmna_err_t *err) {
-  return ((test_device_file *)obj)->free(err);
+void test_device_file::free(void *obj) {
+  ((test_device_file *)obj)->free();
 }
 
 device_file test_device_file::interface = {.free = &test_device_file::free};

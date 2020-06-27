@@ -11,19 +11,25 @@ bool test_id_mapper::add_get_id(void *obj, void *target, int *id,
 void *test_id_mapper::find(void *obj, int id, crmna_err_t *err) {
   return ((test_id_mapper *)obj)->find(id, err);
 }
-bool test_id_mapper::remove(void *obj, int id, crmna_err_t *err) {
-  return ((test_id_mapper *)obj)->remove(id, err);
+
+bool test_id_mapper::replace(void *obj, int id, void *new_one,
+                             void **replaced_entry, crmna_err_t *err) {
+  return ((test_id_mapper *)obj)->replace(id, new_one, replaced_entry, err);
+}
+
+bool test_id_mapper::remove(void *obj, int id, void **removed_entry,
+                            crmna_err_t *err) {
+  return ((test_id_mapper *)obj)->remove(id, removed_entry, err);
 }
 bool test_id_mapper::get_iterator(void *obj, id_mapper_iterator_ref *iterator,
                                   crmna_err_t *err) {
   return ((test_id_mapper *)obj)->get_iterator(iterator, err);
 }
-bool test_id_mapper::free(void *obj, crmna_err_t *err) {
-  return ((test_id_mapper *)obj)->free(err);
-}
+void test_id_mapper::free(void *obj) { ((test_id_mapper *)obj)->free(); }
 
 id_mapper test_id_mapper::interface = {.add_get_id = test_id_mapper::add_get_id,
                                        .find = test_id_mapper::find,
+                                       .replace = test_id_mapper::replace,
                                        .remove = test_id_mapper::remove,
                                        .get_iterator =
                                            test_id_mapper::get_iterator,
@@ -35,7 +41,7 @@ void test_id_mapper::set_ref(id_mapper_ref *ref) {
 }
 
 test_id_mapper_mock::test_id_mapper_mock() {
-  ON_CALL(*this, free(_)).WillByDefault(Return(true));
+  ON_CALL(*this, free()).WillByDefault(Return());
   ON_CALL(*this, add_get_id(_, _, _))
       .WillByDefault(Invoke([this](void *target, int *id, crmna_err_t *) {
         this->map.insert(std::make_pair(this->next_id, target));
@@ -43,6 +49,38 @@ test_id_mapper_mock::test_id_mapper_mock() {
         this->next_id++;
         return true;
       }));
+
+  ON_CALL(*this, find(_, _))
+      .WillByDefault(Invoke([this](int id, crmna_err_t *) -> void * {
+        if (this->map.find(id) == this->map.end()) {
+          return NULL;
+        } else {
+          return this->map.at(id);
+        }
+      }));
+
+  ON_CALL(*this, replace(_, _, _, _))
+      .WillByDefault(Invoke(
+          [this](int id, void *new_one, void **replaced_entry, crmna_err_t *) {
+            auto entry = this->map.find(id);
+            if (entry == this->map.end()) {
+              return false;
+            }
+            if (replaced_entry != NULL) {
+              *replaced_entry = entry->second;
+            }
+            this->map[id] = new_one;
+            return true;
+          }));
+  ON_CALL(*this, remove(_, _, _))
+      .WillByDefault(
+          Invoke([this](int id, void **removed_entry, crmna_err_t *) {
+            if (removed_entry != NULL) {
+              *removed_entry = this->map.at(id);
+            }
+            this->map.erase(id);
+            return true;
+          }));
 }
 
 bool test_id_mapper_factory::create_id_mapper(void *obj, id_mapper_ref *ref,
@@ -62,8 +100,7 @@ test_id_mapper_factory_mock::test_id_mapper_factory_mock() {
   ON_CALL(*this, create_id_mapper(_, _, _, _))
       .WillByDefault(
           Invoke([this](id_mapper_ref *ref, int, int, crmna_err_t *) {
-            if (this->next_mock == 10)
-            {
+            if (this->next_mock == 10) {
               throw std::runtime_error("overflow mock");
             }
             this->mocks[this->next_mock].set_ref(ref);

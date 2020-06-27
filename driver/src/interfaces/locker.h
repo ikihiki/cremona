@@ -3,9 +3,9 @@
 #include "../common.h"
 
 typedef struct {
-  bool (*lock)(void *obj, crmna_err_t *err);
-  bool (*unlock)(void *obj, crmna_err_t *err);
-  bool (*free)(void *obj, crmna_err_t *err);
+  void (*lock)(void *obj);
+  void (*unlock)(void *obj);
+  void (*free)(void *obj);
 } locker;
 
 typedef struct {
@@ -19,27 +19,23 @@ typedef struct {
  * ロックを取得します。
  * @param ref インターフェースリファレンス
  * @param err エラー
- * @return 取得に成功した場合はtrue。失敗した場合はfalse。
  */
-bool locker_lock(locker_ref *ref, crmna_err_t *err);
+void locker_lock(locker_ref *ref);
 
 /**
  * @fn
  * ロックを解放します。
  * @param ref インターフェースリファレンス
  * @param err エラー
- * @return 解放に成功した場合はtrue。失敗した場合はfalse。
  */
-bool locker_unlock(locker_ref *ref, crmna_err_t *err);
+void locker_unlock(locker_ref *ref);
 
 /**
  * @fn
  * ロックを破棄します。
  * @param ref インターフェースリファレンス
- * @param err エラー
- * @return 破棄に成功した場合はtrue。失敗した場合はfalse。
  */
-bool locker_free(locker_ref *ref, crmna_err_t *err);
+void locker_free(locker_ref *ref);
 
 /**
  * @fn

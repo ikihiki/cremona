@@ -44,13 +44,13 @@ bool init_device_manager(cremona_device_manager_t *device_manager,
     return false;
   }
   if (!create_locker(locker_factory, &device_manager->lock, err)) {
-    communicator_free(&device_manager->comm, err);
+    communicator_free(&device_manager->comm);
     return false;
   }
   if (!create_id_mapper_range(id_mapper_factory, &device_manager->devices,
                               driver_number_min, driver_number_max, err)) {
-    communicator_free(&device_manager->comm, err);
-    locker_free(&device_manager->lock, err);
+    communicator_free(&device_manager->comm);
+    locker_free(&device_manager->lock);
     return false;
   }
   return true;
@@ -59,57 +59,38 @@ bool init_device_manager(cremona_device_manager_t *device_manager,
 bool destroy_device_manager(cremona_device_manager_t *device_manager,
                             crmna_err_t *err) {
 
-  if (!locker_lock(&device_manager->lock, err))
-    return false;
+  locker_lock(&device_manager->lock);
 
   id_mapper_iterator_ref iterator;
   cremona_device_t *device;
   if (!id_mapper_get_iterator(&device_manager->devices, &iterator, err)) {
-    locker_unlock(&device_manager->lock, err);
+    locker_unlock(&device_manager->lock);
     return false;
   }
 
   while (id_mapper_iterator_next(&iterator, err)) {
     device = (cremona_device_t *)id_mapper_iterator_get_value(&iterator, err);
     if (err->error_msg_len != 0) {
-      locker_unlock(&device_manager->lock, err);
+      locker_unlock(&device_manager->lock);
       return false;
     }
     if (device == NULL)
       continue;
 
-    if (!destroy_device(device, err)) {
-      locker_unlock(&device_manager->lock, err);
-      return false;
-    }
+    destroy_device(device);
   }
 
   if (err->error_msg_len != 0) {
-    locker_unlock(&device_manager->lock, err);
+    locker_unlock(&device_manager->lock);
     return false;
   }
 
-  if (id_mapper_iterator_free(&iterator, err) != 0) {
-    locker_unlock(&device_manager->lock, err);
-    return false;
-  }
+  id_mapper_iterator_free(&iterator);
+  id_mapper_free(&device_manager->devices);
+  communicator_free(&device_manager->comm);
 
-  if (id_mapper_free(&device_manager->devices, err) != 0) {
-    locker_unlock(&device_manager->lock, err);
-    return false;
-  }
-
-  if (!communicator_free(&device_manager->comm, err)) {
-    return false;
-  }
-
-  if (!locker_unlock(&device_manager->lock, err)) {
-    return false;
-  }
-
-  if (!locker_free(&device_manager->lock, err)) {
-    return false;
-  }
+  locker_unlock(&device_manager->lock);
+  locker_free(&device_manager->lock);
   return true;
 }
 
@@ -142,32 +123,24 @@ static bool create_device_message(cremona_device_manager_t *device_manager,
     return false;
   }
 
-  cremona_device_t *device = (cremona_device_t *)allocator_allocate(
-      device_manager->alloc, sizeof(cremona_device_t));
-  if (device == NULL) {
-    LOG_AND_WRITE_ERROR(device_manager->logger_ref, error,
-                        "Cannot allocate device. pid: %d", pid);
-    return false;
-  }
-
   int miner = -1;
-  if (!id_mapper_add_get_id(&device_manager->devices, device, &miner, error)) {
-    allocator_free(device_manager->alloc, device);
+  if (!id_mapper_add_get_id(&device_manager->devices, NULL, &miner, error)) {
     LOG_AND_WRITE_ERROR(device_manager->logger_ref, error,
                         "Cannot assign miner number for device. pid: %d", pid);
     return false;
   }
 
-  if (!init_device(device, miner, pid, data.uid, data.name,
-                   device_manager->id_mapper_factory,
-                   device_manager->locker_factory, &device_manager->comm,
-                   device_manager->waiter_factory,
-                   device_manager->device_file_factory,
-                   device_manager->logger_ref, device_manager->alloc, error)) {
+  cremona_device_t *device = create_device(
+      miner, pid, data.uid, data.name,
+      device_manager->id_mapper_factory, device_manager->locker_factory,
+      &device_manager->comm, device_manager->waiter_factory,
+      device_manager->device_file_factory, device_manager->logger_ref,
+      device_manager->alloc, error);
+  if (device == NULL)
+  {
     id_mapper_remove(&device_manager->devices, miner, error);
-    allocator_free(device_manager->alloc, device);
     LOG_AND_WRITE_ERROR(device_manager->logger_ref, error,
-                        "Cannot init device. pid: %d", pid);
+                        "Cannot create device. pid: %d", pid);
     return false;
   }
 
@@ -180,13 +153,22 @@ static bool create_device_message(cremona_device_manager_t *device_manager,
   if (communicator_send_message(&device_manager->comm, pid,
                                 CRMNA_CREATE_DEVICE_RESULT, &send_buf,
                                 error) == -1) {
-    destroy_device(device, error);
+    release_device(device);
     id_mapper_remove(&device_manager->devices, miner, error);
-    allocator_free(device_manager->alloc, device);
     LOG_AND_WRITE_ERROR(device_manager->logger_ref, error,
-                        "Cannot send int device message. pid: %d", pid);
+                        "Cannot send init device message. pid: %d", pid);
     return false;
   }
+
+  if (!id_mapper_replace(&device_manager->devices, miner, device, error)) {
+    release_device(device);
+    id_mapper_remove(&device_manager->devices, miner, error);
+    LOG_AND_WRITE_ERROR(device_manager->logger_ref, error,
+                        "Cannot publish device. pid: %d, miner: %d", pid,
+                        miner);
+    return false;
+  }
+
   LOG_INFO(device_manager->logger_ref, "Device created. name: %s id: %ld",
            device->name, device->miner);
   return true;
@@ -202,36 +184,52 @@ bool destroy_device_message(cremona_device_manager_t *device_manager,
     return false;
   }
 
-  cremona_device_t *device; // = cremna_get_device(device_manager, msg.id);
+  cremona_device_t *device = (cremona_device_t *)id_mapper_find(
+      &device_manager->devices, msg.id, error);
   if (device == NULL) {
     LOG_AND_WRITE_ERROR(device_manager->logger_ref, error,
                         "Cannot find device of %llu.", msg.id);
     return false;
   }
+  add_ref_device(device);
+
   LOG_ERROR(device_manager->logger_ref, "%p  %d %d %d", device_manager,
             device->miner, device->pid, device->refCount);
 
-  //  cremona_device_lock(device);
-  uint64_t deviceId = device->miner;
-  uint32_t devicePid = device->pid;
-  // cremona_device_unlock(device);
-  if (devicePid != pid) {
+  if (device->pid != pid) {
     LOG_AND_WRITE_ERROR(device_manager->logger_ref, error,
                         "Deffecent pid. id: %llu reqest: %d target: %d",
-                        deviceId, pid, devicePid);
+                        device->miner, pid, device->pid);
+    release_device(device);
     return false;
   }
 
-  destroy_device(device, error);
-  // delete_device(device_manager, msg.id);
-  release_device(device);
+  if (!id_mapper_remove(&device_manager->devices, device->miner, error)) {
+    LOG_AND_WRITE_ERROR(device_manager->logger_ref, error,
+                        "Cannot remove device of %d.", device->pid);
+    release_device(device);
+    return false;
+  }
 
-  destroy_device_result_t result = {deviceId};
+  release_device(device); //id_mapperからの参照削除
+
+  destroy_device(device);
+
+  destroy_device_result_t result = {device->miner};
   char message[100];
   int msg_size =
       serialize_destroy_device_result(&result, message, sizeof(message));
-  // send_message(device_manager, pid, CRMNA_DESTROY_DEVICE_RESULT, message,
-  //              msg_size);
+  crmna_buf_t send_buf = {.buf = message, .buf_size = msg_size};
+  if (communicator_send_message(&device_manager->comm, pid,
+                                CRMNA_DESTROY_DEVICE_RESULT, &send_buf,
+                                error) == -1) {
+    LOG_AND_WRITE_ERROR(device_manager->logger_ref, error,
+                        "Cannot send destroy device of %d.", device->pid);
+    release_device(device);
+    return false;
+  }
+
+  release_device(device);
   return true;
 }
 

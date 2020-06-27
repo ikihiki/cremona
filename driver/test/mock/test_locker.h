@@ -6,14 +6,14 @@ class test_locker {
 public:
   virtual ~test_locker(){};
   void set_ref(locker_ref *ref);
-  virtual bool lock(crmna_err_t *err) = 0;
-  virtual bool unlock(crmna_err_t *err) = 0;
-  virtual bool free(crmna_err_t *err) = 0;
+  virtual void lock() = 0;
+  virtual void unlock() = 0;
+  virtual void free() = 0;
 
 private:
-  static bool lock(void *obj, crmna_err_t *err);
-  static bool unlock(void *obj, crmna_err_t *err);
-  static bool free(void *obj, crmna_err_t *err);
+  static void lock(void *obj);
+  static void unlock(void *obj);
+  static void free(void *obj);
 
   static locker interface;
 };
@@ -21,9 +21,9 @@ private:
 class test_locker_mock : public test_locker {
 public:
   test_locker_mock();
-  MOCK_METHOD1(lock, bool(crmna_err_t *err));
-  MOCK_METHOD1(unlock, bool(crmna_err_t *err));
-  MOCK_METHOD1(free, bool(crmna_err_t *err));
+  MOCK_METHOD0(lock, void());
+  MOCK_METHOD0(unlock, void());
+  MOCK_METHOD0(free, void());
 };
 
 class test_locker_factory {

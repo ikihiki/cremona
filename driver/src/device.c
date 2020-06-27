@@ -5,7 +5,9 @@ cremona_device_t *add_ref_device(cremona_device_t *device) {
   if (device == NULL) {
     return NULL;
   }
+  locker_lock(&device->lock);
   if (device->isDestroied) {
+    locker_unlock(&device->lock);
     LOG_ERROR(device->logger_ref,
               "Device already destroyed. device id: %llu, device name: %s",
               device->miner, device->name);
@@ -13,16 +15,25 @@ cremona_device_t *add_ref_device(cremona_device_t *device) {
   }
 
   device->refCount++;
+  locker_unlock(&device->lock);
   return device;
 }
 
-bool init_device(cremona_device_t *device, int miner, uint32_t pid,
-                 uint32_t uid, char *name,
-                 id_mapper_factory_ref *id_mapper_factory,
-                 locker_factory_ref *locker_factory, communicator_ref *comm,
-                 waiter_factory_ref *waiter_factory,
-                 device_file_factory_ref *device_file_factory,
-                 logger *logger_ref, allocator_ref *alloc, crmna_err_t *error) {
+cremona_device_t *
+create_device(int miner, uint32_t pid, uint32_t uid,
+              char *name, id_mapper_factory_ref *id_mapper_factory,
+              locker_factory_ref *locker_factory, communicator_ref *comm,
+              waiter_factory_ref *waiter_factory,
+              device_file_factory_ref *device_file_factory, logger *logger_ref,
+              allocator_ref *alloc, crmna_err_t *error) {
+
+  cremona_device_t *device =
+      (cremona_device_t *)allocator_allocate(alloc, sizeof(cremona_device_t));
+  if (device == NULL) {
+    LOG_AND_WRITE_ERROR(logger_ref, error,
+                        "Cannot allocate device. pid: %d", pid);
+    return NULL;
+  }
 
   device->isDestroied = false;
   device->refCount = 0;
@@ -41,81 +52,91 @@ bool init_device(cremona_device_t *device, int miner, uint32_t pid,
   clear_device_file_ref(&device->device_file);
 
   if (!create_locker(locker_factory, &device->lock, error)) {
-    destroy_device(device, error);
     LOG_AND_WRITE_ERROR(logger_ref, error,
                         "Cannot allocate locker in device. pid: %d", pid);
-    return false;
+    goto err;
   }
 
   if (!create_id_mapper(id_mapper_factory, &device->toots, error)) {
-    destroy_device(device, error);
     LOG_AND_WRITE_ERROR(logger_ref, error,
                         "Cannot allocate id_mapper in device. pid: %d", pid);
-    return false;
+    goto err;
   }
 
   if (!create_device_file(device_file_factory, device, &device->device_file,
                           error)) {
-    destroy_device(device, error);
     LOG_AND_WRITE_ERROR(logger_ref, error,
                         "Cannot create device file in device. pid: %d", pid);
-    return false;
+    goto err;
   }
 
   LOG_INFO(device->logger_ref,
            "Device created. name: %s id: %ld pid: %u uid: %u", device->name,
            device->miner, device->pid, device->uid);
 
-  return true;
-}
+  device->refCount++;
+  return device;
 
-bool destroy_device(cremona_device_t *device, crmna_err_t *error) {
-  device->isDestroied = true;
+err:
   if (device->device_file.interface != NULL) {
-    device_file_free(&device->device_file, error);
+    device_file_free(&device->device_file);
   }
   if (device->toots.interface != NULL) {
-    id_mapper_free(&device->toots, error);
+    id_mapper_free(&device->toots);
   }
   if (device->lock.interface != NULL) {
-    locker_free(&device->lock, error);
+    locker_free(&device->lock);
   }
+  allocator_free(alloc, device);
+  return NULL;
+}
+
+void destroy_device(cremona_device_t *device) {
+  locker_lock(&device->lock);
+  device->isDestroied = true;
+  locker_unlock(&device->lock);
   LOG_INFO(device->logger_ref, "Device destroyed. name: %s id: %ld pid: %u",
            device->name, device->miner, device->pid);
-
-  return true;
 }
 
 void release_device(cremona_device_t *device) {
   if (device == NULL) {
     return;
   }
-  // cremona_device_lock(device);
+  locker_lock(&device->lock);
   device->refCount--;
-  // cremona_device_unlock(device);
-  if (device->refCount <= 0) {
-    if (device->refCount < 0) {
-      LOG_WARN(
-          device->logger_ref,
-          "refCount is under 0 {\"id\": %ld, \"pid\": %d, \"refCount\": %d}",
-          device->miner, device->pid, device->refCount);
-    }
-    if (device->isDestroied == false) {
-      LOG_WARN(device->logger_ref,
-               "not destroied but refCount is less or equal 0. {\"id\": %llu, "
-               "\"pid\": %d, \"refCount\": %d}",
-               device->miner, device->pid, device->refCount);
-    }
-    if (count_toot(device) > 0) {
-      LOG_WARN(device->logger_ref,
-               "toot map is not empty but refCount is less or equal 0. "
-               "{\"id\": %llu, "
-               "\"pid\": %d, \"refCount\": %d}",
-               device->miner, device->pid, device->refCount);
-    }
-    LOG_INFO(device->logger_ref, "Device deallocated. name: %s id: %llu",
-             device->name, device->miner);
+  if (device->refCount > 0) {
+    locker_unlock(&device->lock);
+    return;
   }
+
+  if (device->refCount < 0) {
+    LOG_WARN(device->logger_ref,
+             "refCount is under 0 {\"id\": %ld, \"pid\": %d, \"refCount\": %d}",
+             device->miner, device->pid, device->refCount);
+  }
+  if (device->isDestroied == false) {
+    LOG_WARN(device->logger_ref,
+             "not destroied but refCount is less or equal 0. {\"id\": %llu, "
+             "\"pid\": %d, \"refCount\": %d}",
+             device->miner, device->pid, device->refCount);
+  }
+  if (count_toot(device) > 0) {
+    LOG_WARN(device->logger_ref,
+             "toot map is not empty but refCount is less or equal 0. "
+             "{\"id\": %llu, "
+             "\"pid\": %d, \"refCount\": %d}",
+             device->miner, device->pid, device->refCount);
+  }
+
+  locker_unlock(&device->lock);
+  device_file_free(&device->device_file);
+  id_mapper_free(&device->toots);
+  locker_free(&device->lock);
+  allocator_free(device->alloc, device);
+
+  LOG_INFO(device->logger_ref, "Device deallocated. name: %s id: %llu",
+           device->name, device->miner);
 }
 
 cremona_toot_t *open_toot(cremona_device_t *device, bool wait,

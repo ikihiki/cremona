@@ -4,15 +4,9 @@ using ::testing::DoAll;
 using ::testing::Invoke;
 using ::testing::Return;
 
-bool test_locker::lock(void *obj, crmna_err_t *err) {
-  return ((test_locker *)obj)->lock(err);
-}
-bool test_locker::unlock(void *obj, crmna_err_t *err) {
-  return ((test_locker *)obj)->unlock(err);
-}
-bool test_locker::free(void *obj, crmna_err_t *err) {
-  return ((test_locker *)obj)->free(err);
-}
+void test_locker::lock(void *obj) { ((test_locker *)obj)->lock(); }
+void test_locker::unlock(void *obj) { ((test_locker *)obj)->unlock(); }
+void test_locker::free(void *obj) { ((test_locker *)obj)->free(); }
 
 locker test_locker::interface = {.lock = &test_locker::lock,
                                  .unlock = &test_locker::unlock,
@@ -24,7 +18,7 @@ void test_locker::set_ref(locker_ref *ref) {
 }
 
 test_locker_mock::test_locker_mock() {
-  ON_CALL(*this, free(_)).WillByDefault(Return(true));
+  ON_CALL(*this, free()).WillByDefault(Return());
 }
 
 bool test_locker_factory::create_locker(void *obj, locker_ref *lock,

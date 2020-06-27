@@ -10,9 +10,7 @@ int test_communicator::send_message(void *obj, uint32_t pid, int type,
                                     crmna_buf_t *buf, crmna_err_t *err) {
   return ((test_communicator *)obj)->send_message(pid, type, buf, err);
 }
-bool test_communicator::free(void *obj, crmna_err_t *err) {
-  return ((test_communicator *)obj)->free(err);
-}
+void test_communicator::free(void *obj) { ((test_communicator *)obj)->free(); }
 
 communicator test_communicator::communicator_interface = {
     .send_message = &test_communicator::send_message,
@@ -24,7 +22,7 @@ void test_communicator::set_ref(communicator_ref *ref) {
 }
 
 test_communicator_mock::test_communicator_mock() {
-  ON_CALL(*this, free(_)).WillByDefault(Return(true));
+  ON_CALL(*this, free()).WillByDefault(Return());
   ON_CALL(*this, send_message(_, _, _, _))
       .WillByDefault(
           Invoke([](int32_t pid, int type, crmna_buf_t *buf, crmna_err_t *err) {

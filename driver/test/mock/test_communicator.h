@@ -9,12 +9,12 @@ public:
 
   virtual int send_message(uint32_t pid, int type, crmna_buf_t *buf,
                            crmna_err_t *err) = 0;
-  virtual bool free(crmna_err_t *err) = 0;
+  virtual void free() = 0;
 
 private:
   static int send_message(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
                           crmna_err_t *err);
-  static bool free(void *obj, crmna_err_t *err);
+  static void free(void *obj);
 
   static communicator communicator_interface;
 };
@@ -25,7 +25,7 @@ public:
   MOCK_METHOD4(send_message,
                int(uint32_t pid, int type,
                    crmna_buf_t *buf, crmna_err_t *err));
-  MOCK_METHOD1(free, bool(crmna_err_t *err));
+  MOCK_METHOD0(free, void());
 };
 
 class test_communicator_factory {

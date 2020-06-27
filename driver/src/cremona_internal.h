@@ -14,26 +14,25 @@ int send_message(cremona_device_manager_t *device_manager, uint32_t pid,
                  int type, char *buf, size_t buf_size);
 bool rent_miner_num(cremona_device_manager_t *device_manager,
                     unsigned int *miner);
-void release_miner_num(cremona_device_manager_t *device_manager, unsigned int miner);
+void release_miner_num(cremona_device_manager_t *device_manager,
+                       unsigned int miner);
 
 // util
 uint64_t create_id(cremona_device_manager_t *device_manager);
 
 // device
 cremona_device_t *add_ref_device(cremona_device_t *device);
-bool init_device(
-    cremona_device_t *device, int miner,
-    uint32_t pid, uint32_t uid, char *name,
-    id_mapper_factory_ref *id_mapper_factory,
-    locker_factory_ref *locker_factory, communicator_ref *comm,
-    waiter_factory_ref *waiter_factory,device_file_factory_ref *device_file_factory, logger *logger_ref, allocator_ref *alloc,
-    crmna_err_t *error);
+cremona_device_t *
+create_device(int miner, uint32_t pid, uint32_t uid, char *name,
+              id_mapper_factory_ref *id_mapper_factory,
+              locker_factory_ref *locker_factory, communicator_ref *comm,
+              waiter_factory_ref *waiter_factory,
+              device_file_factory_ref *device_file_factory, logger *logger_ref,
+              allocator_ref *alloc, crmna_err_t *error);
 
-void cremona_device_lock(cremona_device_t *device);
-//void cremona_device_unlock(cremona_device_t *device);
 cremona_device_t *get_cremona_device(cremona_device_manager_t *device_manager,
                                      uint64_t id);
-bool destroy_device(cremona_device_t *device, crmna_err_t *error);
+void destroy_device(cremona_device_t *device);
 void release_device(cremona_device_t *device);
 bool recive_close_toot_result(cremona_toot_t *toot, cremona_device_t *device,
                               send_toot_result_t *message, crmna_err_t *error);

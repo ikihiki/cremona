@@ -6,17 +6,17 @@ class test_device_file {
 public:
   virtual ~test_device_file(){};
   void set_ref(device_file_ref *ref);
-  virtual bool free(crmna_err_t *err) = 0;
+  virtual void free() = 0;
 
 private:
-  static bool free(void *obj, crmna_err_t *err);
+  static void free(void *obj);
 
   static device_file interface;
 };
 
 class test_device_file_mock : public test_device_file {
 public:
-  MOCK_METHOD1(free, bool(crmna_err_t *err));
+  MOCK_METHOD0(free, void());
 };
 
 class test_device_file_factory {
