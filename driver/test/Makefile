@@ -35,3 +35,6 @@ clean:
 run: $(TARGET) 
 	-$(TARGET)
 .PHONY: run
+
+watch:
+	reflex --decoration=none -r '\.(cpp|h)$$' make

@@ -5,16 +5,18 @@ ccflags-y := -DMPACK_HAS_CONFIG -std=gnu99 -Wno-declaration-after-statement
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
 BUILD_DIR ?= $(CURDIR)/../../build/driver
-BUILD_DIR_MAKEFILE ?= $(CURDIR)/../../build/driver/Makefile
+TARGET ?= $(CURDIR)/../../build/driver/cremona.ko
 
-default: $(BUILD_DIR_MAKEFILE)
+$(TARGET): $(BUILD_DIR)
 	make -C $(KDIR) M=$(BUILD_DIR) src=$(CURDIR) modules
 
 $(BUILD_DIR):
 	mkdir -p "$@"
 
-$(BUILD_DIR_MAKEFILE): $(BUILD_DIR)
-	touch "$@"
+all: clean $(TARGET)
 
 clean:
 	make -C $(KDIR) M=$(BUILD_DIR) src=$(CURDIR) clean
+
+watch:
+	reflex --decoration=none -r '\.(c|h)$$' make
