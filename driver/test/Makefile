@@ -1,5 +1,5 @@
 COMPILER     = g++
-CFLAGS       = -g -MMD -MP -Wall -Wextra -Winit-self -Wno-missing-field-initializers -DMPACK_HAS_CONFIG -DCRMNA_TEST
+CFLAGS       = -g -MMD -MP -std=c++17  -Wall -Wextra -Winit-self -Wno-missing-field-initializers -DMPACK_HAS_CONFIG -DCRMNA_TEST
 LIBS         = 
 INCLUDE      = -I../src 
 TEST_INCLUDE = $(INCLUDE) -I.. -Itest -I../third_party/googletest/googletest/include -I../third_party/googletest/googlemock/include 

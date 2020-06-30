@@ -44,7 +44,10 @@ void delete_toot(cremona_device_t *device, uint64_t id);
 int count_toot(cremona_device_t *device);
 
 // toot
-cremona_toot_t *create_toot(cremona_device_t *device, crmna_err_t *error);
+cremona_toot_t *
+create_toot(cremona_device_t *device, locker_factory_ref *locker_factory,
+            communicator_ref *comm, waiter_factory_ref *waiter_factory,
+            allocator_ref *alloc, logger *logger_ref, crmna_err_t *error);
 bool recive_open_toot_result(cremona_toot_t *toot, new_toot_result_t *message,
                              crmna_err_t *err);
 void cremona_toot_lock(cremona_toot_t *toot);

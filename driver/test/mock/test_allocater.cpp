@@ -30,4 +30,13 @@ test_allocater_mock::test_allocater_mock() {
         this->next_device++;
         return (void*)result;
       }));
+  ON_CALL(*this, allocate(sizeof(cremona_toot_t)))
+      .WillByDefault(Invoke([this](size_t) {
+        if (this->next_toot == 10) {
+          throw std::runtime_error("overflow device");
+        }
+        auto result = &(this->toots[this->next_toot]);
+        this->next_toot++;
+        return (void *)result;
+      }));
 }

@@ -2,8 +2,10 @@
 #define CRMNA_WAITER_HEADER
 #include "../common.h"
 
+typedef bool (*cond_func)(void *context);
+
 typedef struct {
-  bool (*wait)(void *obj, crmna_err_t *err);
+  bool (*wait)(void *obj, cond_func cond, void *context, int msec, crmna_err_t *err);
   bool (*notify)(void *obj, crmna_err_t *err);
   bool (*free)(void *obj, crmna_err_t *err);
 } waiter;
@@ -17,10 +19,14 @@ typedef struct {
  * @fn
  * ロックを取得します。
  * @param ref インターフェースリファレンス
+ * @param cond 起床する条件
+ * @param context 条件関数のコンテキスト
+ * @param msec タイムアウト時間(msec)
  * @param err エラー
  * @return 取得に成功した場合はtrue。失敗した場合はfalse。
  */
-bool waiter_wait(waiter_ref *ref, crmna_err_t *err);
+bool waiter_wait(waiter_ref *ref, cond_func cond, void *context, int msec,
+                 crmna_err_t *err);
 
 /**
  * @fn

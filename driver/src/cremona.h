@@ -35,12 +35,13 @@ typedef enum toot_wait_type {
 typedef struct cremona_toot {
   uint64_t id;
   toot_state_t state;
-  cremona_device_t *device;
   // char buf[500];
   int prev_count;
   int send_count;
   int refCount;
   logger *logger_ref;
+  locker_ref lock;
+  waiter_ref wait;
 } cremona_toot_t;
 
 typedef struct cremona_toot_callbacks {
@@ -72,16 +73,6 @@ typedef struct cremona_device {
   allocator_ref *alloc;
 } cremona_device_t;
 
-typedef struct cremona_device_callbacks {
-  void (*lock)(cremona_device_t *device);
-  void (*unlock)(cremona_device_t *device);
-  cremona_device_t *(*init_device)(cremona_device_manager_t *device_manager,
-                                   char *name, unsigned int miner);
-  bool (*create_device)(cremona_device_t *device);
-  bool (*destroy_device)(cremona_device_t *device);
-  void (*cleanup_device)(cremona_device_t *device);
-} cremona_device_callbacks_t;
-
 typedef struct cremona_device_manager cremona_device_manager_t;
 
 typedef struct cremona_device_manager_callbacks {
@@ -100,7 +91,6 @@ typedef struct cremona_device_manager_callbacks {
 
 typedef struct cremona_device_manager_config {
   cremona_device_manager_callbacks_t devicce_manager_callbacks;
-  cremona_device_callbacks_t device_collbacks;
   cremona_toot_callbacks_t toot_callbacks;
 } cremona_device_manager_config_t;
 

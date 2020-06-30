@@ -162,7 +162,7 @@ bool create_device_manager_cntext(device_manager_context_t *context,
 
   set_device_manager_callbacks(
       &context->cremona.config.devicce_manager_callbacks);
-  set_device_callbacks(&context->cremona.config.device_collbacks);
+  //set_device_callbacks(&context->cremona.config.device_collbacks);
   set_toot_callbacks(&context->cremona.config.toot_callbacks);
 
   mutex_init(&(context->mutex));

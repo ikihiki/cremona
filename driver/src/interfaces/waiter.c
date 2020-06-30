@@ -1,6 +1,7 @@
 #include "waiter.h"
 
-bool waiter_wait(waiter_ref *ref, crmna_err_t *err) {
+bool waiter_wait(waiter_ref *ref, cond_func cond, void *context, int msec,
+                 crmna_err_t *err) {
   if (ref == NULL) {
     snprintf(err->error_msg, err->error_msg_len, "reference is null");
     err->error_msg_len = strlen(err->error_msg);
@@ -22,7 +23,7 @@ bool waiter_wait(waiter_ref *ref, crmna_err_t *err) {
     err->error_msg_len = strlen(err->error_msg);
     return false;
   }
-  return ref->interface->wait(ref->obj, err);
+  return ref->interface->wait(ref->obj,cond, context, msec, err);
 }
 
 bool waiter_notify(waiter_ref *ref, crmna_err_t *err) {

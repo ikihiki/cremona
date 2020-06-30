@@ -20,8 +20,8 @@ cremona_device_t *add_ref_device(cremona_device_t *device) {
 }
 
 cremona_device_t *
-create_device(int miner, uint32_t pid, uint32_t uid,
-              char *name, id_mapper_factory_ref *id_mapper_factory,
+create_device(int miner, uint32_t pid, uint32_t uid, char *name,
+              id_mapper_factory_ref *id_mapper_factory,
               locker_factory_ref *locker_factory, communicator_ref *comm,
               waiter_factory_ref *waiter_factory,
               device_file_factory_ref *device_file_factory, logger *logger_ref,
@@ -30,8 +30,8 @@ create_device(int miner, uint32_t pid, uint32_t uid,
   cremona_device_t *device =
       (cremona_device_t *)allocator_allocate(alloc, sizeof(cremona_device_t));
   if (device == NULL) {
-    LOG_AND_WRITE_ERROR(logger_ref, error,
-                        "Cannot allocate device. pid: %d", pid);
+    LOG_AND_WRITE_ERROR(logger_ref, error, "Cannot allocate device. pid: %d",
+                        pid);
     return NULL;
   }
 
@@ -140,46 +140,89 @@ void release_device(cremona_device_t *device) {
 }
 
 cremona_toot_t *open_toot(cremona_device_t *device, bool wait,
-                          crmna_err_t *err) {
-
+                          crmna_err_t *error) {
+  locker_lock(&device->lock);
   if (device->isDestroied) {
+    locker_unlock(&device->lock);
     LOG_AND_WRITE_ERROR(
-        device->logger_ref, err,
+        device->logger_ref, error,
         "Device already destroyed. device id: %llu, device name: %s",
         device->miner, device->name);
     return NULL;
   }
+  locker_unlock(&device->lock);
 
-  cremona_toot_t *toot = create_toot(device, err);
-
-  if (toot == NULL) {
+  int id = -1;
+  if (!id_mapper_add_get_id(&device->toots, NULL, &id, error)) {
+    LOG_AND_WRITE_ERROR(device->logger_ref, error,
+                        "Cannot assign id  for toot. pid: %d", device->pid);
     return NULL;
   }
 
-  add_toot(device, toot);
+  cremona_toot_t *toot =
+      create_toot(device, device->locker_factory, device->comm, device->waiter_factory, device->alloc, device->logger_ref, error);
+
+  if (toot == NULL) {
+    LOG_AND_WRITE_ERROR(device->logger_ref, error,
+                        "Cannot create toot. pid: %d", device->pid);
+    id_mapper_remove(&device->toots, id, error);
+    return NULL;
+  }
+
+  if (!id_mapper_replace(&device->toots, id, toot, error)) {
+    LOG_AND_WRITE_ERROR(device->logger_ref, error,
+                        "Cannot publish device. pid: %d, miner: %d",
+                        device->pid, device->miner);
+    release_toot(toot);
+    id_mapper_remove(&device->toots, id, error);
+    return NULL;
+  }
 
   new_toot_t new_toot = {toot->id, device->miner};
   char message[100];
   int msg_size = serialize_new_toot(&new_toot, message, sizeof(message));
-  // send_message(device->device_manager, device->pid, CRMNA_NEW_TOOT, message,
-  //              msg_size);
-
-  if (wait) {
-    //    wait_toot(toot, WAIT_OPEN);
+  crmna_buf_t send_buf = {.buf = message, .buf_size = msg_size};
+  toot_state_t state;
+  if (communicator_send_message(device->comm, device->pid, CRMNA_NEW_TOOT,
+                                &send_buf, error) == -1)
+  {
+    LOG_AND_WRITE_ERROR(device->logger_ref, error,
+                        "Cannot send init device message. pid: %d",
+                        device->pid);
+    goto err;
   }
 
+  if (wait) {
+    wait_toot(toot, WAIT_OPEN);
+  }
+  locker_lock(&toot->lock);
+  state = toot->state;
+  locker_unlock(&toot->lock);
+
+  if ((wait && state != OPEND) ||
+      (!wait && state != OPEND && state != OPEN_RESULT_WAIT)) {
+    LOG_AND_WRITE_ERROR(device->logger_ref, error,
+                        "Cannot open toot. pid: %d", device->pid);
+    goto err;
+  }
   return add_ref_toot(toot);
+
+err:
+  release_toot(toot);
+  id_mapper_remove(&device->toots, id, error);
+  return NULL;
 }
 
 bool recive_close_toot_result(cremona_toot_t *toot, cremona_device_t *device,
                               send_toot_result_t *message, crmna_err_t *error) {
-  if (toot->device != device) {
-    LOG_AND_WRITE_ERROR(
-        device->logger_ref, error,
-        "toot is not in device. device id: %llu, device name: %s toot id: %llu",
-        device->miner, device->name, toot->id);
-    return false;
-  }
+  // if (toot->device != device) {
+  //   LOG_AND_WRITE_ERROR(
+  //       device->logger_ref, error,
+  //       "toot is not in device. device id: %llu, device name: %s toot
+  // id:
+  //       %llu", device->miner, device->name, toot->id);
+  //   return false;
+  // }
   destroy_toot(toot, error);
   delete_toot(device, toot->id);
   return true;

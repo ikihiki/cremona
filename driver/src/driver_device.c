@@ -71,12 +71,5 @@ void crmna_cleanup_device(cremona_device_t *device) {
   kfree(context);
 }
 
-void set_device_callbacks(cremona_device_callbacks_t *collbacks) {
-  collbacks->lock = &crmna_device_lock;
-  collbacks->unlock = &cremona_device_unlock;
-  collbacks->init_device = &crmna_init_device;
-  collbacks->create_device = &crmna_create_device;
-  collbacks->destroy_device = &crmna_destroy_device;
-  collbacks->cleanup_device = &crmna_cleanup_device;
-}
+
 #endif

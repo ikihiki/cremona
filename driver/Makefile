@@ -15,6 +15,7 @@ run-test:
 
 watch:
 	export LC_ALL=C && export LANG=C; \
+	make clean; \
 	while true; do \
 		echo build start; \
 		make build-driver; \
