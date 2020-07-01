@@ -77,7 +77,34 @@
 			"stdexcept": "cpp",
 			"streambuf": "cpp",
 			"cinttypes": "cpp",
-			"typeinfo": "cpp"
-		}
+			"typeinfo": "cpp",
+			"compare": "cpp",
+			"concepts": "cpp",
+			"ranges": "cpp",
+			"chrono": "cpp",
+			"condition_variable": "cpp",
+			"ratio": "cpp",
+			"thread": "cpp"
+		},
+		"files.autoSave": "afterDelay",
+		"editor.formatOnSave": true,
+		"editor.formatOnType": true,
+		"[c]": {
+			"editor.defaultFormatter": "xaver.clang-format"
+		},
+		"editor.formatOnPaste": true,
+		"[cpp]": {
+			"editor.defaultFormatter": "xaver.clang-format"
+		},
+		"go.useLanguageServer": true,
+	},
+	"extensions": {
+		"recommendations": [
+			"ms-vscode.cpptools",
+			"matepek.vscode-catch2-test-adapter",
+			"xaver.clang-format",
+			"golang.go",
+			"premparihar.gotestexplorer"
+		]
 	}
 }

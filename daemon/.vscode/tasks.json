@@ -16,9 +16,7 @@
                     "LANG": "C"
                 }
             },
-            "problemMatcher": [
-                "$go"
-            ],
+            "problemMatcher": ["$go"],
             "promptOnClose": false,
             "presentation": {
                 "echo": true,
