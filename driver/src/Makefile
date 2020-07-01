@@ -4,8 +4,8 @@ cremona-objs := main.o driver_device_manager.o driver_device.o driver_toot.o mpa
 ccflags-y := -DMPACK_HAS_CONFIG -std=gnu99 -Wno-declaration-after-statement
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
-BUILD_DIR ?= $(CURDIR)/../../build/driver
-TARGET ?= $(CURDIR)/../../build/driver/cremona.ko
+BUILD_DIR ?= $(CURDIR)/../../build/driver/module
+TARGET ?= $(CURDIR)/../../build/driver/module/cremona.ko
 
 $(TARGET): $(BUILD_DIR)
 	make -C $(KDIR) M=$(BUILD_DIR) src=$(CURDIR) modules
