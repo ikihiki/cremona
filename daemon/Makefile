@@ -35,7 +35,9 @@ clean: clean-daemon clean-web
 
 build-daemon: $(DAEMON_TARGET)
 
-build-web: $(WEB_TARGET)
+gen-swagger:
+	cd $(WEB_ROOT) && ~/go/bin/swag i
+build-web: gen-swagger $(WEB_TARGET)
 
 build: build-daemon build-web
 
@@ -47,4 +49,4 @@ watch:
 	reflex --decoration=none -r '\.go$$' make build
 
 watch-web:
-	reflex --decoration=none -r '\.go$$' -s make run-web
+	reflex --decoration=none -G 'cmd/web/docs/*' -r '\.go$$' -s make run-web
