@@ -14,10 +14,4 @@ run-test:
 	make run -C test
 
 watch:
-	export LC_ALL=C && export LANG=C; \
-	while true; do \
-		echo build start; \
-		make build-driver; \
-		make build-test; \
-		inotifywait -r -e modify --include "\.(c|cpp|h)" ./; \
-	done
+	reflex --decoration=none -r '\.(c|cpp|h)$$' make build
