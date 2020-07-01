@@ -1,0 +1,32 @@
+{
+    // tasks.json 形式の詳細についての資料は、
+    // https://go.microsoft.com/fwlink/?LinkId=733558 をご覧ください
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "watch",
+            "command": "make",
+            "args": [
+                "watch",
+            ],
+            "options": {
+                "env": {
+                    "LC_ALL": "C",
+                    "LANG": "C"
+                }
+            },
+            "problemMatcher": ["$go"],
+            "promptOnClose": false,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "isBackground": true,
+        }
+    ]
+}
