@@ -1,7 +1,6 @@
 package master
 
 import (
-	"context"
 	"log"
 	"time"
 )

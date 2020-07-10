@@ -97,6 +97,9 @@
 			"editor.defaultFormatter": "xaver.clang-format"
 		},
 		"go.useLanguageServer": true,
+		"taskExplorer.enableSideBar": true,
+		"taskExplorer.enableExplorerView": false,
+		"taskExplorer.pathToMake": "make",
 	},
 	"extensions": {
 		"recommendations": [

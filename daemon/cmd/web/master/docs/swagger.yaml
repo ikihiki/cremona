@@ -1,0 +1,60 @@
+basePath: /api/v1
+definitions:
+  main.Geolocation:
+    properties:
+      altitude:
+        type: number
+      latitude:
+        type: number
+    type: object
+host: localhost:32424
+info:
+  contact: {}
+  description: This is a sample swagger server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /data:
+    get:
+      description: get data
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: get data
+  /log:
+    get:
+      description: get log bufferS
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: get log
+  /start:
+    get:
+      description: get testdata
+      produces:
+      - application/x-json-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.Geolocation'
+            type: array
+      summary: start server
+  /test:
+    get:
+      description: get testdata
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: test
+swagger: "2.0"

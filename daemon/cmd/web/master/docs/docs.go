@@ -28,6 +28,54 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/data": {
+            "get": {
+                "description": "get data",
+                "summary": "get data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/log": {
+            "get": {
+                "description": "get log bufferS",
+                "summary": "get log",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/start": {
+            "get": {
+                "description": "get testdata",
+                "produces": [
+                    "application/x-json-stream"
+                ],
+                "summary": "start server",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.Geolocation"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/test": {
             "get": {
                 "description": "get testdata",
@@ -39,6 +87,19 @@ var doc = `{
                             "type": "string"
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "main.Geolocation": {
+            "type": "object",
+            "properties": {
+                "altitude": {
+                    "type": "number"
+                },
+                "latitude": {
+                    "type": "number"
                 }
             }
         }

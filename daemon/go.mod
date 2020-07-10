@@ -12,8 +12,9 @@ require (
 	github.com/mattn/go-mastodon v0.0.4
 	github.com/sourcegraph/jsonrpc2 v0.0.0-20200429184054-15c2290dcb37
 	github.com/stretchr/testify v1.6.1
-	github.com/swaggo/echo-swagger v1.0.0 // indirect
+	github.com/swaggo/echo-swagger v1.0.0
 	github.com/swaggo/swag v1.6.7
+	github.com/thoas/go-funk v0.7.0
 	github.com/valyala/fasttemplate v1.1.1 // indirect
 	github.com/vishvananda/netlink v1.1.0
 	github.com/vishvananda/netns v0.0.0-20200520041808-52d707b772fe
