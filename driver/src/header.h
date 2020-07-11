@@ -44,8 +44,8 @@ typedef struct device_context {
 
 struct file_operations *get_file_operatins(void);
 
-void set_device_manager_callbacks(
-    cremona_device_manager_callbacks_t *callbacks);
+// void set_device_manager_callbacks(
+//     cremona_device_manager_callbacks_t *callbacks);
 //void set_device_callbacks(cremona_device_callbacks_t *collbacks);
 void set_toot_callbacks(cremona_toot_callbacks_t *callbacks);
 

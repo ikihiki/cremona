@@ -3,7 +3,7 @@
 #include "locker.h"
 
 typedef struct {
-  bool (*create_locker)(void *obj, locker_ref *lock, crmna_err_t *err);
+  bool (*create_locker)(void *obj, locker_ref *lock, crmna_err *err);
 } locker_factory;
 
 typedef struct {
@@ -20,6 +20,6 @@ typedef struct {
  * @return 成功した場合はtrue。エラーの場合はfalse。
  */
 bool create_locker(locker_factory_ref *factory, locker_ref *ref,
-                   crmna_err_t *err);
+                   crmna_err *err);
 
 #endif

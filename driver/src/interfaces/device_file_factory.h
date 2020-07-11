@@ -3,7 +3,7 @@
 #include "device_file.h"
 
 typedef struct {
-  bool (*create_device_file)(void *obj, cremona_device_t *device, device_file_ref *lock, crmna_err_t *err);
+  bool (*create_device_file)(void *obj, cremona_device_t *device, device_file_ref *lock, crmna_err *err);
 } device_file_factory;
 
 typedef struct {
@@ -22,6 +22,6 @@ typedef struct {
  */
 bool create_device_file(device_file_factory_ref *factory,
                         cremona_device_t *device, device_file_ref *ref,
-                        crmna_err_t *err);
+                        crmna_err *err);
 
 #endif

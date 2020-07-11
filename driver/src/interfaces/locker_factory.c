@@ -1,32 +1,30 @@
 #include "locker_factory.h"
 
 bool create_locker(locker_factory_ref *factory, locker_ref *ref,
-                   crmna_err_t *err) {
+                   crmna_err *err) {
   if (factory == NULL) {
-    snprintf(err->error_msg, err->error_msg_len, "reference is null");
-    err->error_msg_len = strlen(err->error_msg);
+    ADD_ERROR(err, "reference is null");
+
     return false;
   }
   if (factory->interface == NULL) {
-    snprintf(err->error_msg, err->error_msg_len, "interface is null");
-    err->error_msg_len = strlen(err->error_msg);
+    ADD_ERROR(err, "interface is null");
+
     return false;
   }
   if (factory->obj == NULL) {
-    snprintf(err->error_msg, err->error_msg_len, "interface reference is null");
-    err->error_msg_len = strlen(err->error_msg);
+    ADD_ERROR(err, "interface reference is null");
+
     return false;
   }
   if (factory->interface->create_locker == NULL) {
-    snprintf(err->error_msg, err->error_msg_len,
-            "function pointer \"create_locker\" is null");
-    err->error_msg_len = strlen(err->error_msg);
+    ADD_ERROR(err, "function pointer \"create_locker\" is null");
+
     return false;
   }
   if (ref == NULL) {
-    snprintf(err->error_msg, err->error_msg_len,
-            "output target reference is null");
-    err->error_msg_len = strlen(err->error_msg);
+    ADD_ERROR(err, "output target reference is null");
+
     return false;
   }
   ref->interface = NULL;

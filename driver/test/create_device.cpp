@@ -15,7 +15,8 @@
 
 //   static cremona_device_t *create_device_err(char *name) { return NULL; }
 
-//   static int send_message(uint32_t pid, int type, char *buf, size_t buf_size) {
+//   static int send_message(uint32_t pid, int type, char *buf, size_t buf_size)
+//   {
 //     return 0;
 //   }
 
@@ -80,7 +81,7 @@
 //                              0x64, 0x65, 0x76, 0x69, 0x63, 0x65};
 
 //   char error_msg[100];
-//   crmna_err_t err = {.error_msg = error_msg,
+//   crmna_err err = {.error_msg = error_msg,
 //                      .error_msg_len = sizeof(error_msg)};
 //   bool result = reciveMessage(&device_manager, 100, CRMNA_CREATE_DEVICE,
 //                               (char *)message, sizeof(message), &err);
@@ -106,7 +107,7 @@
 //   unsigned char message[] = {0x90, 0xab, 0x74, 0x65, 0x73, 0x74, 0x5f,
 //                              0x64, 0x65, 0x76, 0x69, 0x63, 0x65};
 //   char error_msg[100];
-//   crmna_err_t err = {.error_msg = error_msg,
+//   crmna_err err = {.error_msg = error_msg,
 //                      .error_msg_len = sizeof(error_msg)};
 
 //   int result = reciveMessage(&device_manager, 100, CRMNA_CREATE_DEVICE,
@@ -127,7 +128,7 @@
 //   unsigned char message[] = {0x91, 0xab, 0x74, 0x65, 0x73, 0x74, 0x5f,
 //                              0x64, 0x65, 0x76, 0x69, 0x63, 0x65};
 //   char error_msg[100];
-//   crmna_err_t err = {.error_msg = error_msg,
+//   crmna_err err = {.error_msg = error_msg,
 //                      .error_msg_len = sizeof(error_msg)};
 
 //   int result = reciveMessage(&device_manager, 100, CRMNA_CREATE_DEVICE,

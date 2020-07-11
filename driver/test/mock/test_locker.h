@@ -1,6 +1,6 @@
 #pragma once
-#include <gmock/gmock.h>
 #include "interfaces/locker_factory.h"
+#include <gmock/gmock.h>
 
 class test_locker {
 public:
@@ -30,19 +30,22 @@ class test_locker_factory {
 public:
   virtual ~test_locker_factory() {}
   locker_factory_ref get_factory();
-  virtual bool create_locker(locker_ref *lock, crmna_err_t *err) = 0;
+  virtual bool create_locker(locker_ref *lock, crmna_err *err) = 0;
 
 private:
-  static bool create_locker(void *obj, locker_ref *lock, crmna_err_t *err);
+  static bool create_locker(void *obj, locker_ref *lock, crmna_err *err);
 
   static locker_factory interface;
 };
 
-class test_locker_factory_mock: public test_locker_factory{
-  public:
-    test_locker_factory_mock();
-    MOCK_METHOD2(create_locker, bool(locker_ref *lock, crmna_err_t *err));
+class test_locker_factory_mock : public test_locker_factory {
+public:
+  test_locker_factory_mock();
+  MOCK_METHOD2(create_locker, bool(locker_ref *lock, crmna_err *err));
 
-    test_locker_mock mocks[10];
-    int next_mock = 0;
+  test_locker_mock mocks[10];
+  int next_mock = 0;
+
+  locker_factory_ref ref;
+  locker_factory_ref *get_mock_factory();
 };

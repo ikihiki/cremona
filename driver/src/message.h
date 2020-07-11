@@ -27,10 +27,10 @@ size_t serialize_get_stats_result(const get_stats_result_t *data, char *dest,
 #define CRMNA_CREATE_DEVICE_RESULT (NLMSG_MIN_TYPE * 5)
 typedef struct create_device {
   char name[50];
-  uint32_t uid;
+  int uid;
 } create_device_t;
 typedef struct create_device_result {
-  uint64_t id;
+  int id;
 } create_device_result_t;
 int serialize_create_device_result(const create_device_result_t *data,
                                    char *dest, size_t max_length);
@@ -42,10 +42,10 @@ bool deserialize_create_conn(const char *data, size_t length,
 #define CRMNA_DESTROY_DEVICE_RESULT                                            \
   (NLMSG_MIN_TYPE * 7) // + 2 is arbitrary. same value for kern/usr
 typedef struct destroy_device {
-  uint64_t id;
+  int id;
 } destroy_device_t;
 typedef struct destroy_device_result {
-  uint64_t id;
+  int id;
 } destroy_device_result_t;
 int serialize_destroy_device_result(const destroy_device_result_t *data,
                                     char *dest, size_t max_length);
@@ -58,14 +58,16 @@ bool deserialize_destroy_device(const char *data, size_t length,
   (NLMSG_MIN_TYPE * 9) // + 2 is arbitrary. same value for kern/usr
 
 typedef struct new_toot {
-  uint64_t toot_id;
-  uint64_t device_id;
+  int message_id;
+  int toot_id;
+  int device_id;
 } new_toot_t;
 
 typedef struct new_toot_result {
-  uint64_t toot_id;
-  uint64_t device_id;
-  int result;
+  int message_id;
+  int toot_id;
+  int device_id;
+  bool result;
 } new_toot_result_t;
 
 int serialize_new_toot(const new_toot_t *data, char *dest, size_t max_length);
@@ -76,13 +78,13 @@ bool deserialize_new_toot_result(const char *data, size_t length,
 #define CRMNA_ADD_TOOT_TEXT_RESULT (NLMSG_MIN_TYPE * 11)
 
 typedef struct add_toot_text {
-  uint64_t toot_id;
-  uint64_t device_id;
+  int toot_id;
+  int device_id;
   char *text;
 } add_toot_text_t;
 typedef struct add_toot_text_result {
-  uint64_t toot_id;
-  uint64_t device_id;
+  int toot_id;
+  int device_id;
   int result;
 } add_toot_text_result_t;
 
@@ -94,12 +96,12 @@ bool deserialize_add_toot_text_result(const char *data, size_t length,
 #define CRMNA_SEND_TOOT (NLMSG_MIN_TYPE * 12)
 #define CRMNA_SEND_TOOT_RESULT (NLMSG_MIN_TYPE * 13)
 typedef struct send_toot {
-  uint64_t toot_id;
-  uint64_t device_id;
+  int toot_id;
+  int device_id;
 } send_toot_t;
 typedef struct send_toot_result {
-  uint64_t toot_id;
-  uint64_t device_id;
+  int toot_id;
+  int device_id;
   int result;
 } send_toot_result_t;
 

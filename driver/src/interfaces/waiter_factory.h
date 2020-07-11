@@ -3,7 +3,7 @@
 #include "waiter.h"
 
 typedef struct {
-  bool (*create_waiter)(void *obj, waiter_ref *lock, crmna_err_t *err);
+  bool (*create_waiter)(void *obj, waiter_ref *lock, crmna_err *err);
 } waiter_factory;
 
 typedef struct {
@@ -19,6 +19,7 @@ typedef struct {
  * @param err エラー
  * @return 成功した場合はtrue。エラーの場合はfalse。
  */
-bool create_waiter(waiter_factory_ref *factory, waiter_ref *ref, crmna_err_t *err);
+bool create_waiter(waiter_factory_ref *factory, waiter_ref *ref,
+                   crmna_err *err);
 
 #endif

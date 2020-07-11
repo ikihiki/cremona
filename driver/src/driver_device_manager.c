@@ -4,17 +4,16 @@
 static device_manager_context_t *_context;
 
 static int my_rcv_msg2(struct sk_buff *skb, struct nlmsghdr *nlh,
-                       struct netlink_ext_ack *ack)
-{
-    char error_msg[100];
-    crmna_err_t err = {.error_msg = error_msg,
-                       .error_msg_len = sizeof(error_msg)};
+                       struct netlink_ext_ack *ack) {
+  char error_msg[100];
+  // crmna_err err = {.error_msg = error_msg,
+  //                    .error_msg_len = sizeof(error_msg)};
 
-    // bool result =
-    //     reciveMessage(&_context->cremona, nlh->nlmsg_pid, nlh->nlmsg_type,
-    //                   (char *)nlmsg_data(nlh), nlh->nlmsg_len, &err);
-    // return result ? 0 : 1;
-    return 0;
+  // bool result =
+  //     reciveMessage(&_context->cremona, nlh->nlmsg_pid, nlh->nlmsg_type,
+  //                   (char *)nlmsg_data(nlh), nlh->nlmsg_len, &err);
+  // return result ? 0 : 1;
+  return 0;
 }
 
 static void recive_data(struct sk_buff *skb) {
@@ -83,12 +82,14 @@ static void device_manager_unlock(cremona_device_manager_t *manager) {
 
 static bool rent_miner_num(cremona_device_manager_t *device_manager,
                            unsigned int *miner) {
-  printk(KERN_ERR "Cremona: dev: rent_miner_num %p  %p\n", device_manager, miner);
+  printk(KERN_ERR "Cremona: dev: rent_miner_num %p  %p\n", device_manager,
+         miner);
   unsigned int result;
   device_manager_context_t *c =
       container_of(device_manager, device_manager_context_t, cremona);
-  
-  printk(KERN_ERR "Cremona: dev: rent_miner_num %p  %p %p\n", device_manager, miner, c);
+
+  printk(KERN_ERR "Cremona: dev: rent_miner_num %p  %p %p\n", device_manager,
+         miner, c);
 
   result = ffs(~c->miner_list);
   printk(KERN_ERR "Cremona: dev: rent_miner_num %p  %p %p %d\n", device_manager,
@@ -100,24 +101,25 @@ static bool rent_miner_num(cremona_device_manager_t *device_manager,
   }
   return false;
 }
-static void release_miner_num(cremona_device_manager_t *device_manager, unsigned int miner) {
+static void release_miner_num(cremona_device_manager_t *device_manager,
+                              unsigned int miner) {
   device_manager_context_t *c =
       container_of(device_manager, device_manager_context_t, cremona);
 
   c->miner_list = c->miner_list | (1 << (miner - 1));
 }
 
-void set_device_manager_callbacks(
-    cremona_device_manager_callbacks_t *callbacks) {
-  callbacks->send_message = &crmna_send_message;
-  callbacks->lock = &device_manager_lock;
-  callbacks->unlock = &device_manager_unlock;
-  callbacks->get_rand = &get_rand;
-  callbacks->get_time = &get_time;
-  callbacks->log = &crmna_log;
-  callbacks->rent_miner_num = &rent_miner_num;
-  callbacks->release_miner_num = &release_miner_num;
-}
+// void set_device_manager_callbacks(
+//     cremona_device_manager_callbacks_t *callbacks) {
+//   callbacks->send_message = &crmna_send_message;
+//   callbacks->lock = &device_manager_lock;
+//   callbacks->unlock = &device_manager_unlock;
+//   callbacks->get_rand = &get_rand;
+//   callbacks->get_time = &get_time;
+//   callbacks->log = &crmna_log;
+//   callbacks->rent_miner_num = &rent_miner_num;
+//   callbacks->release_miner_num = &release_miner_num;
+// }
 
 bool create_device_manager_cntext(device_manager_context_t *context,
                                   unsigned int miner_base,
@@ -160,20 +162,20 @@ bool create_device_manager_cntext(device_manager_context_t *context,
   context->nl_sock = nl_sock;
   context->nl_unit = nl_unit;
 
-  set_device_manager_callbacks(
-      &context->cremona.config.devicce_manager_callbacks);
-  //set_device_callbacks(&context->cremona.config.device_collbacks);
-  set_toot_callbacks(&context->cremona.config.toot_callbacks);
+  // set_device_manager_callbacks(
+  //     &context->cremona.config.devicce_manager_callbacks);
+  // // set_device_callbacks(&context->cremona.config.device_collbacks);
+  // set_toot_callbacks(&context->cremona.config.toot_callbacks);
 
   mutex_init(&(context->mutex));
 
-  //init_device_manager(&context->cremona);
+  // init_device_manager(&context->cremona);
   _context = context;
 }
 
 void destroy_device_manager_context(device_manager_context_t *context) {
 
-  //destroy_device_manager(&context->cremona);
+  // destroy_device_manager(&context->cremona);
   mutex_destroy(&(context->mutex));
 
   class_destroy(context->device_class);

@@ -6,15 +6,13 @@ using ::testing::Invoke;
 using ::testing::Return;
 
 bool test_waiter::wait(void *obj, cond_func cond, void *context, int msec,
-                       crmna_err_t *err) {
+                       crmna_err *err) {
   return ((test_waiter *)obj)->wait(cond, context, msec, err);
 }
-bool test_waiter::notify(void *obj, crmna_err_t *err) {
-  return ((test_waiter *)obj)->notify(err);
+void test_waiter::notify(void *obj) {
+  ((test_waiter *)obj)->notify();
 }
-bool test_waiter::free(void *obj, crmna_err_t *err) {
-  return ((test_waiter *)obj)->free(err);
-}
+void test_waiter::free(void *obj) { ((test_waiter *)obj)->free(); }
 
 waiter test_waiter::interface = {.wait = &test_waiter::wait,
                                  .notify = &test_waiter::notify,
@@ -31,8 +29,8 @@ void test_waiter::set_ref(waiter_ref *ref) {
 
 test_waiter_mock::test_waiter_mock() {
   ON_CALL(*this, wait(_, _, _, _))
-      .WillByDefault(Invoke(
-          [this](cond_func cond, void *context, int msec, crmna_err_t *) {
+      .WillByDefault(
+          Invoke([this](cond_func cond, void *context, int msec, crmna_err *) {
             {
               std::unique_lock<std::mutex> lk(this->mtx);
               this->cond.wait_for(
@@ -42,7 +40,7 @@ test_waiter_mock::test_waiter_mock() {
             return true;
           }));
 
-  ON_CALL(*this, notify(_)).WillByDefault(Invoke([this](crmna_err_t *) {
+  ON_CALL(*this, notify()).WillByDefault(Invoke([this]() {
     { std::lock_guard<std::mutex> lk(this->mtx); }
     this->cond.notify_one();
     return true;
@@ -50,7 +48,7 @@ test_waiter_mock::test_waiter_mock() {
 }
 
 bool test_waiter_factory::create_waiter(void *obj, waiter_ref *lock,
-                                        crmna_err_t *err) {
+                                        crmna_err *err) {
   return ((test_waiter_factory *)obj)->create_waiter(lock, err);
 }
 
@@ -62,8 +60,10 @@ waiter_factory_ref test_waiter_factory::get_factory() {
 }
 
 test_waiter_factory_mock::test_waiter_factory_mock() {
+  this->ref = this->get_factory();
+
   ON_CALL(*this, create_waiter(_, _))
-      .WillByDefault(Invoke([this](waiter_ref *ref, crmna_err_t *) {
+      .WillByDefault(Invoke([this](waiter_ref *ref, crmna_err *) {
         if (this->next_mock == 10) {
           throw std::runtime_error("overflow mock");
         }
@@ -71,4 +71,8 @@ test_waiter_factory_mock::test_waiter_factory_mock() {
         this->next_mock++;
         return true;
       }));
+}
+
+waiter_factory_ref *test_waiter_factory_mock::get_mock_factory() {
+  return &this->ref;
 }

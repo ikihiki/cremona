@@ -4,7 +4,7 @@
 
 typedef struct {
   bool (*create_id_mapper)(void *obj, id_mapper_ref *ref, int min, int max,
-                          crmna_err_t *err);
+                           crmna_err *err);
 } id_mapper_factory;
 
 typedef struct {
@@ -22,8 +22,8 @@ typedef struct {
  * @param err エラー
  * @return 成功した場合はtrue。エラーの場合はfalse。
  */
-bool create_id_mapper_range(id_mapper_factory_ref *factory, id_mapper_ref *ref, int min, int max,
-                      crmna_err_t *err);
+bool create_id_mapper_range(id_mapper_factory_ref *factory, id_mapper_ref *ref,
+                            int min, int max, crmna_err *err);
 
 /**
  * @fn
@@ -36,6 +36,6 @@ bool create_id_mapper_range(id_mapper_factory_ref *factory, id_mapper_ref *ref, 
  * @return 成功した場合はtrue。エラーの場合はfalse。
  */
 bool create_id_mapper(id_mapper_factory_ref *factory, id_mapper_ref *ref,
-                      crmna_err_t *err);
+                      crmna_err *err);
 
 #endif

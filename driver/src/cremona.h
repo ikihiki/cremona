@@ -2,6 +2,8 @@
 #define __CREMONA_HEADER__
 
 #include "common.h"
+#include "message.h"
+#include "communicate.h"
 #include "interfaces/allocator.h"
 #include "interfaces/commuinicator.h"
 #include "interfaces/communicator_factory.h"
@@ -13,7 +15,6 @@
 #include "interfaces/logger.h"
 #include "interfaces/waiter.h"
 #include "interfaces/waiter_factory.h"
-
 
 typedef enum toot_state {
   CREANUPED,
@@ -33,15 +34,19 @@ typedef enum toot_wait_type {
 } toot_wait_type_t;
 
 typedef struct cremona_toot {
-  uint64_t id;
+  int id;
+  int miner;
+  int pid;
   toot_state_t state;
   // char buf[500];
   int prev_count;
   int send_count;
   int refCount;
+  allocator_ref *alloc;
   logger *logger_ref;
   locker_ref lock;
   waiter_ref wait;
+  communicate_t *comm;
 } cremona_toot_t;
 
 typedef struct cremona_toot_callbacks {
@@ -57,14 +62,14 @@ typedef struct cremona_toot_callbacks {
 typedef struct cremona_device {
   char name[50];
   int miner;
-  uint32_t pid;
-  uint32_t uid;
+  int pid;
+  int uid;
   bool isDestroied;
   int refCount;
   id_mapper_ref toots;
   locker_ref lock;
   device_file_ref device_file;
-  communicator_ref *comm;
+  communicate_t *comm;
   locker_factory_ref *locker_factory;
   id_mapper_factory_ref *id_mapper_factory;
   waiter_factory_ref *waiter_factory;
@@ -75,31 +80,12 @@ typedef struct cremona_device {
 
 typedef struct cremona_device_manager cremona_device_manager_t;
 
-typedef struct cremona_device_manager_callbacks {
-  int (*send_message)(cremona_device_manager_t *device_manager, uint32_t pid,
-                      int type, char *buf, size_t buf_size);
-  uint32_t (*get_time)(void);
-  uint32_t (*get_rand)(void);
-  void (*lock)(cremona_device_manager_t *device_manager);
-  void (*unlock)(cremona_device_manager_t *device_manager);
-  void (*log)(cremona_error_level_t level, char *fmt, ...);
-  bool (*rent_miner_num)(cremona_device_manager_t *device_manager,
-                         unsigned int *miner);
-  void (*release_miner_num)(cremona_device_manager_t *device_manager,
-                            unsigned int);
-} cremona_device_manager_callbacks_t;
-
-typedef struct cremona_device_manager_config {
-  cremona_device_manager_callbacks_t devicce_manager_callbacks;
-  cremona_toot_callbacks_t toot_callbacks;
-} cremona_device_manager_config_t;
 
 typedef struct cremona_device_manager {
-  cremona_device_manager_config_t config;
   int refCount;
   id_mapper_ref devices;
   locker_ref lock;
-  communicator_ref comm;
+  communicate_t comm;
   locker_factory_ref *locker_factory;
   id_mapper_factory_ref *id_mapper_factory;
   waiter_factory_ref *waiter_factory;
@@ -117,12 +103,10 @@ bool init_device_manager(cremona_device_manager_t *device_manager,
                          id_mapper_factory_ref *id_mapper_factory,
                          waiter_factory_ref *waiter_factory,
                          device_file_factory_ref *device_file_factory,
-                         logger *logger, allocator_ref *alloc,
-                         crmna_err_t *err);
+                         logger *logger, allocator_ref *alloc, crmna_err *err);
 bool destroy_device_manager(cremona_device_manager_t *device_manager,
-                            crmna_err_t *err);
-bool reciveMessage(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
-                   crmna_err_t *error);
+                            crmna_err *err);
+
 void *cremona_malloc(cremona_device_manager_t *device_manager, int size);
 
 cremona_device_t *get_cremona_device(cremona_device_manager_t *device_manager,
@@ -130,11 +114,9 @@ cremona_device_t *get_cremona_device(cremona_device_manager_t *device_manager,
 
 cremona_toot_t *add_ref_toot(cremona_toot_t *toot);
 void release_toot(cremona_toot_t *toot);
-cremona_toot_t *open_toot(cremona_device_t *device, bool wait,
-                          crmna_err_t *err);
-bool close_toot(cremona_toot_t *toot, crmna_err_t *err);
+cremona_toot_t *open_toot(cremona_device_t *device, bool wait, crmna_err *err);
+bool close_toot(cremona_toot_t *toot, crmna_err *err);
 
-bool add_toot_text(cremona_toot_t *toot, char *text, bool wait,
-                   crmna_err_t *err);
+bool add_toot_text(cremona_toot_t *toot, char *text, bool wait, crmna_err *err);
 
 #endif

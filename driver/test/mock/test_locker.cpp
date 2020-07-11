@@ -22,7 +22,7 @@ test_locker_mock::test_locker_mock() {
 }
 
 bool test_locker_factory::create_locker(void *obj, locker_ref *lock,
-                                        crmna_err_t *err) {
+                                        crmna_err *err) {
   return ((test_locker_factory *)obj)->create_locker(lock, err);
 }
 
@@ -34,8 +34,10 @@ locker_factory_ref test_locker_factory::get_factory() {
 }
 
 test_locker_factory_mock::test_locker_factory_mock() {
+  this->ref = this->get_factory();
+
   ON_CALL(*this, create_locker(_, _))
-      .WillByDefault(Invoke([this](locker_ref *ref, crmna_err_t *) {
+      .WillByDefault(Invoke([this](locker_ref *ref, crmna_err *) {
         if (this->next_mock == 10) {
           throw std::runtime_error("overflow mock");
         }
@@ -43,4 +45,8 @@ test_locker_factory_mock::test_locker_factory_mock() {
         this->next_mock++;
         return true;
       }));
+}
+
+locker_factory_ref *test_locker_factory_mock::get_mock_factory(){
+  return &this->ref;
 }

@@ -21,6 +21,8 @@ allocator_ref test_allocater::get_ref() {
 }
 
 test_allocater_mock::test_allocater_mock() {
+  this->ref = this->get_ref();
+
   ON_CALL(*this, allocate(sizeof(cremona_device_t)))
       .WillByDefault(Invoke([this](size_t) {
         if (this->next_device == 10) {
@@ -39,4 +41,8 @@ test_allocater_mock::test_allocater_mock() {
         this->next_toot++;
         return (void *)result;
       }));
+}
+
+allocator_ref *test_allocater_mock::get_mock_ref(){
+  return &this->ref;
 }

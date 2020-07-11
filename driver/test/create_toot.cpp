@@ -16,7 +16,8 @@
 
 //   static bool destroy_device_err(cremona_device_t *device) { return false; }
 
-//   static int send_message(uint32_t pid, int type, char *buf, size_t buf_size) {
+//   static int send_message(uint32_t pid, int type, char *buf, size_t buf_size)
+//   {
 //     return 0;
 //   }
 
@@ -56,7 +57,8 @@
 //     std::cout << "toot unlock " << toot->id << std::endl;
 //   }
 //   static void wait_toot(cremona_toot_t *toot, toot_wait_type_t wait_type) {
-//     std::cout << "toot wait " << toot->id  << "wait type" << wait_type << std::endl;
+//     std::cout << "toot wait " << toot->id  << "wait type" << wait_type <<
+//     std::endl;
 //   }
 //   static void notify_toot(cremona_toot_t *toot) {
 //     std::cout << "toot notify " << toot->id << std::endl;
@@ -83,23 +85,27 @@
 //       &create_toot_mock::device_manager_lock;
 //   device_manager->config.devicce_manager_callbacks.unlock =
 //       &create_toot_mock::device_manager_unlock;
-//   device_manager->config.devicce_manager_callbacks.log = &create_toot_mock::log;
+//   device_manager->config.devicce_manager_callbacks.log =
+//   &create_toot_mock::log;
 //   device_manager->config.device_collbacks.create_device =
 //       &create_toot_mock::create_device;
 //   device_manager->config.device_collbacks.destroy_device =
 //       &create_toot_mock::destroy_device;
 //   device_manager->config.device_collbacks.cleanup_device =
 //       &create_toot_mock::cleanup_device;
-//   device_manager->config.device_collbacks.lock = &create_toot_mock::device_lock;
+//   device_manager->config.device_collbacks.lock =
+//   &create_toot_mock::device_lock;
 //   device_manager->config.device_collbacks.unlock =
 //       &create_toot_mock::device_unlock;
 
 //   device_manager->config.toot_callbacks.create_toot =
 //       &create_toot_mock::create_toot;
 //   device_manager->config.toot_callbacks.wait = &create_toot_mock::wait_toot;
-//   device_manager->config.toot_callbacks.notify = &create_toot_mock::notify_toot;
-//   device_manager->config.toot_callbacks.lock = &create_toot_mock::lock_toot;
-//   device_manager->config.toot_callbacks.unlock = &create_toot_mock::unlock_toot;
+//   device_manager->config.toot_callbacks.notify =
+//   &create_toot_mock::notify_toot; device_manager->config.toot_callbacks.lock
+//   = &create_toot_mock::lock_toot;
+//   device_manager->config.toot_callbacks.unlock =
+//   &create_toot_mock::unlock_toot;
 //   device_manager->config.toot_callbacks.destroy_toot =
 //       &create_toot_mock::destroy_toot;
 //   device_manager->config.toot_callbacks.cleanup_toot =
@@ -115,7 +121,7 @@
 //   unsigned char create_message[] = {0x91, 0xab, 0x74, 0x65, 0x73, 0x74, 0x5f,
 //                                     0x64, 0x65, 0x76, 0x69, 0x63, 0x65};
 //   char error_msg[100];
-//   crmna_err_t err = {.error_msg = error_msg,
+//   crmna_err err = {.error_msg = error_msg,
 //                      .error_msg_len = sizeof(error_msg)};
 //   reciveMessage(&device_manager, 100, CRMNA_CREATE_DEVICE,
 //                 (char *)create_message, sizeof(create_message), &err);
@@ -157,7 +163,7 @@
 //   unsigned char create_message[] = {0x91, 0xab, 0x74, 0x65, 0x73, 0x74, 0x5f,
 //                                     0x64, 0x65, 0x76, 0x69, 0x63, 0x65};
 //   char error_msg[100];
-//   crmna_err_t err = {.error_msg = error_msg,
+//   crmna_err err = {.error_msg = error_msg,
 //                      .error_msg_len = sizeof(error_msg)};
 //   reciveMessage(&device_manager, 100, CRMNA_CREATE_DEVICE,
 //                 (char *)create_message, sizeof(create_message), &err);
@@ -183,7 +189,7 @@
 //   reciveMessage(&device_manager, 100, CRMNA_NEW_TOOT_RESULT,
 //                 (char *)new_toot_result_message,
 //                 sizeof(new_toot_result_message), &err);
-                
+
 //   EXPECT_EQ(1, toot->refCount);
 //   EXPECT_EQ(OPEND, toot->state);
 

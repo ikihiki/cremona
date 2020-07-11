@@ -25,12 +25,11 @@ public:
   device_file_factory_ref get_factory();
   virtual bool create_device_file(cremona_device_t *device,
                                   device_file_ref *device_file,
-                                  crmna_err_t *err) = 0;
+                                  crmna_err *err) = 0;
 
 private:
   static bool create_device_file(void *obj, cremona_device_t *device,
-                                 device_file_ref *device_file,
-                                 crmna_err_t *err);
+                                 device_file_ref *device_file, crmna_err *err);
 
   static device_file_factory interface;
 };
@@ -40,8 +39,10 @@ public:
   test_device_file_factory_mock();
   MOCK_METHOD3(create_device_file,
                bool(cremona_device_t *device, device_file_ref *device_file,
-                    crmna_err_t *err));
+                    crmna_err *err));
 
   test_device_file_mock mocks[10];
   int next_mock = 0;
+  device_file_factory_ref ref;
+  device_file_factory_ref *get_mock_factory();
 };

@@ -70,108 +70,109 @@ static void crmna_toot_cleanup_toot(cremona_toot_t *toot) {
 }
 
 static int toot_open(struct inode *inode, struct file *file) {
-  printk(KERN_INFO "Cremona: %s: toot open\n", __func__);
+  // printk(KERN_INFO "Cremona: %s: toot open\n", __func__);
 
-  toot_context_t *toot_context;
+  // toot_context_t *toot_context;
 
-  if (file->private_data != NULL) {
-    toot_context = (toot_context_t *)file->private_data;
-  } else {
+  // if (file->private_data != NULL) {
+  //   toot_context = (toot_context_t *)file->private_data;
+  // } else {
 
-    char error_msg[100];
-    crmna_err_t err = {.error_msg = error_msg,
-                       .error_msg_len = sizeof(error_msg)};
+  //   char error_msg[100];
+  //   crmna_err err = {.error_msg = error_msg,
+  //                      .error_msg_len = sizeof(error_msg)};
 
-    bool wait = (file->f_flags & O_NONBLOCK) == 0;
-    device_context_t *device_context =
-        container_of(inode->i_cdev, device_context_t, cdev);
-    cremona_toot_t *toot = open_toot(&device_context->cremona, wait, &err);
-    toot_context = container_of(toot, toot_context_t, cremona);
-    file->private_data = (void *)toot_context;
-  }
-  mutex_lock(&toot_context->mutex);
-  int result = -EIO;
-  if (toot_context->cremona.state == OPEND) {
-    result = 0;
-  }
-  if (toot_context->cremona.state == OPEN_RESULT_WAIT) {
-    result = -EAGAIN;
-  }
-  mutex_unlock(&toot_context->mutex);
-  printk(KERN_INFO "Cremona: %s: toot open compleate result: %d\n", __func__,
-         result);
+  //   bool wait = (file->f_flags & O_NONBLOCK) == 0;
+  //   device_context_t *device_context =
+  //       container_of(inode->i_cdev, device_context_t, cdev);
+  //   cremona_toot_t *toot = open_toot(&device_context->cremona, wait, &err);
+  //   toot_context = container_of(toot, toot_context_t, cremona);
+  //   file->private_data = (void *)toot_context;
+  // }
+  // mutex_lock(&toot_context->mutex);
+  // int result = -EIO;
+  // if (toot_context->cremona.state == OPEND) {
+  //   result = 0;
+  // }
+  // if (toot_context->cremona.state == OPEN_RESULT_WAIT) {
+  //   result = -EAGAIN;
+  // }
+  // mutex_unlock(&toot_context->mutex);
+  // printk(KERN_INFO "Cremona: %s: toot open compleate result: %d\n", __func__,
+  //        result);
 
-  return result;
+  // return result;
+  return 0;
 }
 
 static int toot_close(struct inode *inode, struct file *file) {
-  printk(KERN_INFO "Cremona: %s: toot close\n", __func__);
+  // printk(KERN_INFO "Cremona: %s: toot close\n", __func__);
 
-  if (file->private_data == NULL) {
-    return 0;
-  }
-  toot_context_t *toot_context = (toot_context_t *)file->private_data;
+  // if (file->private_data == NULL) {
+  //   return 0;
+  // }
+  // toot_context_t *toot_context = (toot_context_t *)file->private_data;
 
-  if (toot_context->cremona.state == DESTROYED ||
-      toot_context->cremona.state == TOOT_ERROR) {
-    file->private_data = NULL;
-    release_toot(&toot_context->cremona);
-    return 0;
-  }
+  // if (toot_context->cremona.state == DESTROYED ||
+  //     toot_context->cremona.state == TOOT_ERROR) {
+  //   file->private_data = NULL;
+  //   release_toot(&toot_context->cremona);
+  //   return 0;
+  // }
 
-  char error_msg[100];
-  crmna_err_t err = {.error_msg = error_msg,
-                     .error_msg_len = sizeof(error_msg)};
+  // char error_msg[100];
+  // crmna_err err = {.error_msg = error_msg,
+  //                    .error_msg_len = sizeof(error_msg)};
 
-  bool result = close_toot(&toot_context->cremona, &err);
-  if (result) {
-    file->private_data = NULL;
-    release_toot(&toot_context->cremona);
-    return 0;
-  } else {
-    file->private_data = NULL;
-    release_toot(&toot_context->cremona);
-    return -EIO;
-  }
+  // bool result = close_toot(&toot_context->cremona, &err);
+  // if (result) {
+  //   file->private_data = NULL;
+  //   release_toot(&toot_context->cremona);
+  //   return 0;
+  // } else {
+  //   file->private_data = NULL;
+  //   release_toot(&toot_context->cremona);
+  //   return -EIO;
+  // }
 }
 
 static ssize_t toot_write(struct file *file, const char __user *buf,
                           size_t count, loff_t *f_pos) {
-  printk(KERN_INFO "Cremona: %s: add toot text\n", __func__);
+  // printk(KERN_INFO "Cremona: %s: add toot text\n", __func__);
 
-  if (file->private_data == NULL) {
-    return -EFAULT;
-  }
-  char stored_value[100];
-  int cnt = count < 99 ? count : 99;
-  printk("myDevice_write\n");
-  if (copy_from_user(stored_value, buf, cnt) != 0) {
-    return -EFAULT;
-  }
-  printk("%s\n", stored_value);
+  // if (file->private_data == NULL) {
+  //   return -EFAULT;
+  // }
+  // char stored_value[100];
+  // int cnt = count < 99 ? count : 99;
+  // printk("myDevice_write\n");
+  // if (copy_from_user(stored_value, buf, cnt) != 0) {
+  //   return -EFAULT;
+  // }
+  // printk("%s\n", stored_value);
 
-  toot_context_t *toot_context = (toot_context_t *)file->private_data;
+  // toot_context_t *toot_context = (toot_context_t *)file->private_data;
 
-  char error_msg[100];
-  crmna_err_t err = {.error_msg = error_msg,
-                     .error_msg_len = sizeof(error_msg)};
-  bool wait = true; //(file->f_flags & O_NONBLOCK) == 0;
-  if (!add_toot_text(&toot_context->cremona, stored_value, wait, &err)) {
-    return -EFAULT;
-  }
-  int result;
-  mutex_lock(&toot_context->mutex);
-  if (toot_context->cremona.state == ADD_TEXT_RESULT_WAIT) {
-    result = -EAGAIN;
-  } else if (toot_context->cremona.state == WRITE_COMPLEATE) {
-    toot_context->cremona.state = OPEND;
-    result = toot_context->cremona.prev_count;
-  } else {
-    result = -EFAULT;
-  }
-  mutex_unlock(&toot_context->mutex);
-  printk(KERN_INFO "Cremona: %s: add toot compleate\n", __func__);
-  return result;
+  // char error_msg[100];
+  // crmna_err err = {.error_msg = error_msg,
+  //                    .error_msg_len = sizeof(error_msg)};
+  // bool wait = true; //(file->f_flags & O_NONBLOCK) == 0;
+  // if (!add_toot_text(&toot_context->cremona, stored_value, wait, &err)) {
+  //   return -EFAULT;
+  // }
+  // int result;
+  // mutex_lock(&toot_context->mutex);
+  // if (toot_context->cremona.state == ADD_TEXT_RESULT_WAIT) {
+  //   result = -EAGAIN;
+  // } else if (toot_context->cremona.state == WRITE_COMPLEATE) {
+  //   toot_context->cremona.state = OPEND;
+  //   result = toot_context->cremona.prev_count;
+  // } else {
+  //   result = -EFAULT;
+  // }
+  // mutex_unlock(&toot_context->mutex);
+  // printk(KERN_INFO "Cremona: %s: add toot compleate\n", __func__);
+  // return result;
 }
 
 static struct file_operations ops = {
@@ -180,12 +181,11 @@ static struct file_operations ops = {
     .write = &toot_write,
 };
 
-struct file_operations * get_file_operatins(void)
-{
+struct file_operations *get_file_operatins(void) {
   return &ops;
 }
 
-void set_toot_callbacks(cremona_toot_callbacks_t *callbacks){
+void set_toot_callbacks(cremona_toot_callbacks_t *callbacks) {
   callbacks->create_toot = &crmna_toot_create_toot;
   callbacks->wait = &crmna_toot_wait;
   callbacks->notify = &crmna_toot_notify;

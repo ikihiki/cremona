@@ -4,8 +4,8 @@
 #include "../common.h"
 
 typedef struct {
-  bool (*next)(void *obj, crmna_err_t *err);
-  void *(*get_value)(void *obj, crmna_err_t *err);
+  bool (*next)(void *obj, crmna_err *err);
+  void *(*get_value)(void *obj, crmna_err *err);
   void (*free)(void *obj);
 } id_mapper_iterator;
 
@@ -15,13 +15,13 @@ typedef struct {
 } id_mapper_iterator_ref;
 
 typedef struct {
-  bool (*add_get_id)(void *obj, void *target, int *id, crmna_err_t *err);
-  void *(*find)(void *obj, int id, crmna_err_t *err);
+  bool (*add_get_id)(void *obj, void *target, int *id, crmna_err *err);
+  void *(*find)(void *obj, int id, crmna_err *err);
   bool (*replace)(void *obj, int id, void *new_one, void **replaced_entry,
-                  crmna_err_t *err);
-  bool (*remove)(void *obj, int id, void** removed_entry, crmna_err_t *err);
+                  crmna_err *err);
+  bool (*remove)(void *obj, int id, void **removed_entry, crmna_err *err);
   bool (*get_iterator)(void *obj, id_mapper_iterator_ref *iterator,
-                       crmna_err_t *err);
+                       crmna_err *err);
   void (*free)(void *obj);
 } id_mapper;
 
@@ -29,7 +29,6 @@ typedef struct {
   id_mapper *interface;
   void *obj;
 } id_mapper_ref;
-
 
 /**
  * @fn
@@ -39,7 +38,7 @@ typedef struct {
  * @return 生成されたid。エラーの場合は-1。
  * @detail iteratorが最後に到達したらerrは空でfalseを返す。
  */
-bool id_mapper_iterator_next(id_mapper_iterator_ref *ref, crmna_err_t *err);
+bool id_mapper_iterator_next(id_mapper_iterator_ref *ref, crmna_err *err);
 
 /**
  * @fn
@@ -48,8 +47,7 @@ bool id_mapper_iterator_next(id_mapper_iterator_ref *ref, crmna_err_t *err);
  * @param err エラー
  * @return 現在iteratorが参照しているポインタ。エラーの場合はNULL。
  */
-void *id_mapper_iterator_get_value(id_mapper_iterator_ref *ref,
-                                          crmna_err_t *err);
+void *id_mapper_iterator_get_value(id_mapper_iterator_ref *ref, crmna_err *err);
 /**
  * @fn
  * iteratorを破棄します。
@@ -66,7 +64,7 @@ void id_mapper_iterator_free(id_mapper_iterator_ref *ref);
  * @return 生成されたid。エラーの場合は-1。
  */
 bool id_mapper_add_get_id(id_mapper_ref *ref, void *target, int *id,
-                                 crmna_err_t *err);
+                          crmna_err *err);
 /**
  * @fn
  * 指定されたidのポインタを取得します。
@@ -75,7 +73,7 @@ bool id_mapper_add_get_id(id_mapper_ref *ref, void *target, int *id,
  * @param err エラー
  * @return 発見されたポインタ。エラーの場合はNULL。
  */
-void *id_mapper_find(id_mapper_ref *ref, int id, crmna_err_t *err);
+void *id_mapper_find(id_mapper_ref *ref, int id, crmna_err *err);
 
 /**
  * @fn
@@ -86,8 +84,8 @@ void *id_mapper_find(id_mapper_ref *ref, int id, crmna_err_t *err);
  * @param err エラー
  * @return 成功した場合はtrue。エラーの場合はfalse。
  */
-bool id_mapper_replace(id_mapper_ref *ref, int id, void* new_one,
-                       crmna_err_t *err);
+bool id_mapper_replace(id_mapper_ref *ref, int id, void *new_one,
+                       crmna_err *err);
 
 /**
  * @fn
@@ -99,9 +97,8 @@ bool id_mapper_replace(id_mapper_ref *ref, int id, void* new_one,
  * @param err エラー
  * @return 成功した場合はtrue。エラーの場合はfalse。
  */
-bool id_mapper_replace_and_get_entry(id_mapper_ref *ref, int id,
-                                     void *new_one, void **replaced_entry,
-                                     crmna_err_t *err);
+bool id_mapper_replace_and_get_entry(id_mapper_ref *ref, int id, void *new_one,
+                                     void **replaced_entry, crmna_err *err);
 
 /**
  * @fn
@@ -111,8 +108,7 @@ bool id_mapper_replace_and_get_entry(id_mapper_ref *ref, int id,
  * @param err エラー
  * @return 成功した場合はtrue。エラーの場合はfalse。
  */
-bool id_mapper_remove(id_mapper_ref *ref, int id,
-                      crmna_err_t *err);
+bool id_mapper_remove(id_mapper_ref *ref, int id, crmna_err *err);
 
 /**
  * @fn
@@ -123,8 +119,8 @@ bool id_mapper_remove(id_mapper_ref *ref, int id,
  * @param err エラー
  * @return 成功した場合はtrue。エラーの場合はfalse。
  */
-bool id_mapper_remove_and_get_entry(id_mapper_ref *ref, int id, void **removed_entry,
-                      crmna_err_t *err);
+bool id_mapper_remove_and_get_entry(id_mapper_ref *ref, int id,
+                                    void **removed_entry, crmna_err *err);
 
 /**
  * @fn
@@ -135,8 +131,7 @@ bool id_mapper_remove_and_get_entry(id_mapper_ref *ref, int id, void **removed_e
  * @return 成功した場合はtrue。エラーの場合はfalse。
  */
 bool id_mapper_get_iterator(id_mapper_ref *ref,
-                                   id_mapper_iterator_ref *iterator,
-                                   crmna_err_t *err);
+                            id_mapper_iterator_ref *iterator, crmna_err *err);
 /**
  * @fn
  * mapを破棄します。

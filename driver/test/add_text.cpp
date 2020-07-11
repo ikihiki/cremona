@@ -16,7 +16,8 @@
 
 //   static bool destroy_device_err(cremona_device_t *device) { return false; }
 
-//   static int send_message(uint32_t pid, int type, char *buf, size_t buf_size) {
+//   static int send_message(uint32_t pid, int type, char *buf, size_t buf_size)
+//   {
 //     std::cout << "---send message---" << std::endl;
 //     std::cout << "pid: " << pid << std::endl;
 //     std::cout << "type: " << type << std::endl;
@@ -129,7 +130,7 @@
 //   unsigned char create_message[] = {0x91, 0xab, 0x74, 0x65, 0x73, 0x74, 0x5f,
 //                                     0x64, 0x65, 0x76, 0x69, 0x63, 0x65};
 //   char error_msg[100];
-//   crmna_err_t err = {.error_msg = error_msg,
+//   crmna_err err = {.error_msg = error_msg,
 //                      .error_msg_len = sizeof(error_msg)};
 //   reciveMessage(&device_manager, 100, CRMNA_CREATE_DEVICE,
 //                 (char *)create_message, sizeof(create_message), &err);

@@ -80,7 +80,11 @@
 			"typeinfo": "cpp",
 			"compare": "cpp",
 			"concepts": "cpp",
-			"ranges": "cpp"
+			"ranges": "cpp",
+			"chrono": "cpp",
+			"condition_variable": "cpp",
+			"ratio": "cpp",
+			"thread": "cpp"
 		},
 		"files.autoSave": "afterDelay",
 		"editor.formatOnSave": true,

@@ -27,4 +27,7 @@ public:
   int next_device = 0;
   cremona_toot_t toots[10];
   int next_toot = 0;
+
+  allocator_ref ref;
+  allocator_ref *get_mock_ref();
 };

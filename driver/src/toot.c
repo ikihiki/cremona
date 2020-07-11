@@ -1,5 +1,6 @@
 #include "cremona_internal.h"
 #include "message.h"
+#include "communicate.h"
 
 cremona_toot_t *add_ref_toot(cremona_toot_t *toot) {
   if (toot == NULL) {
@@ -9,48 +10,119 @@ cremona_toot_t *add_ref_toot(cremona_toot_t *toot) {
   return toot;
 }
 
-cremona_toot_t *
-create_toot(cremona_device_t *device, locker_factory_ref *locker_factory,
-            communicator_ref *comm, waiter_factory_ref *waiter_factory,
-            allocator_ref *alloc, logger *logger_ref, crmna_err_t *error) {
+static void destroy_toot(cremona_toot_t *toot) {
+  if (toot == NULL) {
+    return;
+  }
+
+  if (toot->lock.obj != NULL) {
+    locker_free(&toot->lock);
+  }
+
+  if (toot->wait.obj != NULL) {
+    waiter_free(&toot->wait);
+  }
+
+  allocator_ref *alloc = toot->alloc;
+  allocator_free(alloc, toot);
+}
+
+cremona_toot_t *create_toot(int id, int miner, int pid, allocator_ref *alloc,
+                            locker_factory_ref *locker_factory,
+                            waiter_factory_ref *waiter_factory,
+                            communicate_t *comm,
+                            bool wait,
+                             logger *logger_ref,
+                            crmna_err *error) {
 
   cremona_toot_t *toot =
       (cremona_toot_t *)allocator_allocate(alloc, sizeof(cremona_toot_t));
   if (toot == NULL) {
-    LOG_AND_WRITE_ERROR(device->logger_ref, error,
-                        "Create toot fail. device: %s", device->name);
+    LOG_AND_ADD_ERROR(logger_ref, error, "Create toot fail.");
     return NULL;
   }
-
-  create_locker(locker_factory, &toot->lock, error);
-  create_waiter(waiter_factory, &toot->wait, error);
-
+  toot->id = id;
+  toot->miner = miner;
+  toot->pid = pid;
+  toot->alloc = alloc;
   toot->logger_ref = logger_ref;
-
   toot->prev_count = 0;
   toot->send_count = 0;
   toot->refCount = 0;
   toot->state = OPEN_RESULT_WAIT;
+  clear_locker_ref(&toot->lock);
+  clear_waiter_ref(&toot->wait);
+
+  if (!create_locker(locker_factory, &toot->lock, error)) {
+    destroy_toot(toot);
+    return NULL;
+  }
+  if(!create_waiter(waiter_factory, &toot->wait, error)){
+    destroy_toot(toot);
+    return NULL;
+  }
+  if(comm == NULL){
+    destroy_toot(toot);
+    LOG_AND_ADD_ERROR(logger_ref, error, "comm is null")
+    
+    return NULL;
+  }
+  toot->comm = comm;
+
+  // 参照を他に渡すので、初期化関数が保持していることを明示する。
+  add_ref_toot(toot);
+  new_toot_t new_toot = {toot->id, toot->miner};
+  if (!send_new_toot(toot->comm, toot->pid, &new_toot, toot, error)) {
+    destroy_toot(toot);
+    LOG_AND_ADD_ERROR(toot->logger_ref, error,
+                      "Cannot send new toot message.  pid: %d", toot->pid);
+    
+    return NULL;
+  }
+
+  if (wait) {
+
+    wait_toot(toot, WAIT_OPEN);
+  }
+  locker_lock(&toot->lock);
+  bool fail =
+      (wait && toot->state != OPEND) ||
+      (!wait && toot->state != OPEND && toot->state != OPEN_RESULT_WAIT);
+  locker_unlock(&toot->lock);
+
+  if (fail) {
+    cancel_wait_new_toot_result(toot->comm, &new_toot);
+    destroy_toot(toot);
+    LOG_AND_ADD_ERROR(toot->logger_ref, error, "Cannot open toot. pid: %d",
+                      toot->pid);
+    
+    return NULL;
+  }
+  //一瞬参照が外れてcleanupが走らないように
+  toot->refCount--;
   return toot;
 }
 
 bool recive_open_toot_result(cremona_toot_t *toot, new_toot_result_t *message,
-                             crmna_err_t *err) {
-  if (message->result != 0) {
-    // LOG_AND_WRITE_ERROR(toot->logger_ref, err,
-    //                     "Create new toot failed. device: %s toot id: %llu",
-    //                     toot->device->name, toot->id);
+                             crmna_err *err) {
+  if (!message->result) {
+    LOG_AND_ADD_ERROR(toot->logger_ref, err,
+                        "Create new toot failed. "JSON_OUT(miner, d, toot_id, d),
+                        toot->miner, toot->id);
+    locker_lock(&toot->lock);
     toot->state = TOOT_ERROR;
+    locker_unlock(&toot->lock);
     return false;
   }
-  // cremona_toot_lock(toot);
+
+  locker_lock(&toot->lock);
   toot->state = OPEND;
-  // notify(toot);
-  // cremona_toot_unlock(toot);
+  locker_unlock(&toot->lock);
+  waiter_notify(&toot->wait);
   return true;
 }
 
-bool close_toot(cremona_toot_t *toot, crmna_err_t *error) {
+bool close_toot(cremona_toot_t *toot, crmna_err *error) {
   // if (toot->device->isDestroied) {
   //   LOG_AND_WRITE_ERROR(
   //       toot->logger_ref, error,
@@ -78,15 +150,6 @@ bool close_toot(cremona_toot_t *toot, crmna_err_t *error) {
   //  cremona_toot_unlock(toot);
   // wait_toot(toot, WAIT_CLOSE);
 
-  return true;
-}
-
-bool destroy_toot(cremona_toot_t *toot, crmna_err_t *error) {
-  // cremona_toot_lock(toot);
-  toot->state = DESTROYED;
-  // cremona_toot_unlock(toot);
-
-  // notify(toot);
   return true;
 }
 
@@ -119,7 +182,7 @@ void release_toot(cremona_toot_t *toot) {
 }
 
 bool add_toot_text(cremona_toot_t *toot, char *text, bool wait,
-                   crmna_err_t *err) {
+                   crmna_err *err) {
   // cremona_toot_lock(toot);
   if (toot->state != OPEND) {
     // LOG_AND_WRITE_ERROR(toot->logger_ref, err,
@@ -148,7 +211,7 @@ bool add_toot_text(cremona_toot_t *toot, char *text, bool wait,
 
 bool recive_add_toot_text_result(cremona_toot_t *toot,
                                  add_toot_text_result_t *message,
-                                 crmna_err_t *err) {
+                                 crmna_err *err) {
   if (message->result != toot->send_count) {
     // LOG_AND_WRITE_ERROR(toot->logger_ref, err,
     //                     "Add  toot text failed. device: %s toot id: %llu",
@@ -184,13 +247,13 @@ static bool close_wait_cond(void *context) {
 void wait_toot(cremona_toot_t *toot, toot_wait_type_t wait_type) {
   switch (wait_type) {
   case WAIT_OPEN:
-    waiter_wait(&toot->wait, &open_wait_cond, toot, 10, NULL);
+    waiter_wait(&toot->wait, &open_wait_cond, toot, 1000, NULL);
     break;
   case WAIT_CLOSE:
-    waiter_wait(&toot->wait, &close_wait_cond, toot, 10, NULL);
+    waiter_wait(&toot->wait, &close_wait_cond, toot, 1000, NULL);
     break;
   case WAIT_WRITE:
-    waiter_wait(&toot->wait, &write_wait_cond, toot, 10, NULL);
+    waiter_wait(&toot->wait, &write_wait_cond, toot, 1000, NULL);
     break;
   default:
     break;
