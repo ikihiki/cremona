@@ -3,7 +3,7 @@ CFLAGS       = -g -MMD -MP -std=c++17  -Wall -Wextra -Winit-self -Wno-missing-fi
 LIBS         = 
 INCLUDE      = -I../src 
 TEST_INCLUDE = $(INCLUDE) -I.. -Itest -I../third_party/googletest/googletest/include -I../third_party/googletest/googlemock/include 
-TEST_LDFLAGS = $(LDFLAGS) -L../third_party/googletest/lib -lgtest -lgmock -lgmock_main -lpthread 
+TEST_LDFLAGS = $(LDFLAGS) -L../third_party/googletest/lib -lgmock_main -lgtest -lgmock  -lpthread 
 TRGETDIR     = $(CURDIR)/../../build/driver/test/bin
 TARGET       = $(TRGETDIR)/driver_test
 SRCROOT      = ../src
@@ -41,4 +41,4 @@ run: $(TARGET)
 .PHONY: run
 
 watch:
-	reflex --decoration=none -r '\.(cpp|h)$$' make
+	reflex --decoration=none -r '\.(cpp|h)$$' -- sh -c 'echo "build start"; make; echo "Watches established"'

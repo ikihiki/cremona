@@ -23,7 +23,7 @@
                     "background": {
                         "activeOnStart": true,
                         "beginsPattern": "build start",
-                        "endsPattern": "Watches established\\."
+                        "endsPattern": "Watches established"
                     }
                 },
             ],
@@ -59,7 +59,7 @@
                     "background": {
                         "activeOnStart": true,
                         "beginsPattern": "build start",
-                        "endsPattern": "Watches established\\."
+                        "endsPattern": "Watches established"
                     }
                 },
             ],
@@ -95,7 +95,7 @@
                     "background": {
                         "activeOnStart": true,
                         "beginsPattern": "build start",
-                        "endsPattern": "Watches established\\."
+                        "endsPattern": "Watches established"
                     }
                 },
             ],
