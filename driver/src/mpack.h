@@ -501,8 +501,7 @@
 #define S64_MAX LLONG_MAX
 
 #else
-#include <linux/types.h>
-#include <linux/limits.h>
+#include <linux/kernel.h>
 #endif
 
 #if MPACK_STDLIB
