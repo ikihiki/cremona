@@ -1,0 +1,24 @@
+#include "mock_store.h"
+#include "central_store.h"
+
+bool add_device(store_t *store, int pid, int uid, char *name, int *id,
+                crmna_err_t *err) {
+  return store->mock->add_device(pid, uid, name, id, err);
+}
+
+bool attach_device_class(store_t *store, int device_id, crmna_err_t *err) {
+  return store->mock->attach_device_class(device_id, err);
+}
+void remove_device(store_t *store, int device_id) {
+  store->mock->remove_device(device_id);
+}
+
+void detach_device_class(store_t *store, int device_id) {
+  store->mock->detach_device_class(device_id);
+}
+void set_device_ready(store_t *store, int device_id) {
+  store->mock->set_device_ready(device_id);
+}
+communicator_ref_t get_communicator(store_t *store) {
+  return store->mock->get_communicator();
+}
