@@ -1,3 +1,7 @@
+#ifndef __CRMNA_BUFFER_HEADER__
+#define __CRMNA_BUFFER_HEADER__
+#include <stddef.h>
+
 typedef struct crmna_buf {
   char *buf;
   size_t buf_size;
@@ -8,3 +12,5 @@ typedef struct crmna_buf {
   char name##_buffer_content[size];                                            \
   crmna_buf_t name = {                                                         \
       .buf = name##_buffer_content, .buf_size = size, .used_size = 0};
+
+#endif
