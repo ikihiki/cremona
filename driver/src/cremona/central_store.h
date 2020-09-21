@@ -107,7 +107,7 @@ typedef struct action {
     } payload;
 } action_t;
 
-store_t *create_store();
+store_t *create_store(void);
 void destroy_store(store_t *store);
 
 

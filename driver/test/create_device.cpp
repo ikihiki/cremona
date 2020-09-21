@@ -1,8 +1,7 @@
 #include "central_store.h"
-#include "cremona.h"
 #include "mock_store.h"
 #include "mock_communicator.h"
-#include "src/message.h"
+#include "message.h"
 #include <cstdarg>
 #include <cstdlib>
 #include <gtest/gtest.h>
@@ -87,9 +86,7 @@ TEST(device, create_action_from_create_device_message)
   char *name = "test_device";
   unsigned char message[] = {0x92, 0xab, 0x74, 0x65, 0x73, 0x74, 0x5f,
                              0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x0d};
-  crmna_buf_t data = {.buf = (char *)message,
-                      .buf_size = sizeof(message),
-                      .used_size = sizeof(message)};
+  DEFINE_CRMNA_BUF_FROM_MEMORY(data, (char*)message, sizeof(message));
 
   crmna_err_t error;
   error.curret_line = 0;

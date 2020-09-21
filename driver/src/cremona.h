@@ -14,36 +14,11 @@
 #endif
 
 #include "khash.h"
+#include "error.h"
 
-typedef enum cremona_error_level { ERROR, WARN, INFO } cremona_error_level_t;
-
-#define LOG_IMPL(device_manager, error, fmt, ...)                              \
-  (device_manager->config.devicce_manager_callbacks.log(                       \
-      error, "Cremona: %s: " fmt "\n", __func__, __VA_ARGS__))
-
-#define LOG_ERROR(device_manager, fmt, ...)                                    \
-  LOG_IMPL(device_manager, ERROR, fmt, __VA_ARGS__)
-
-#define LOG_WARN(device_manager, fmt, ...)                                     \
-  LOG_IMPL(device_manager, WARN, fmt, __VA_ARGS__)
-
-#define LOG_INFO(device_manager, fmt, ...)                                     \
-  LOG_IMPL(device_manager, INFO, fmt, __VA_ARGS__)
-
-#define LOG_AND_WRITE_ERROR(device_manager, crmna_err, fmt, ...)               \
-  {                                                                            \
-    LOG_ERROR(device_manager, fmt, __VA_ARGS__);                               \
-    snprintf(crmna_err->error_msg, crmna_err->error_msg_len, fmt,              \
-             __VA_ARGS__);                                                     \
-  }
 
 typedef struct cremona_device_manager cremona_device_manager_t;
 typedef struct cremona_device cremona_device_t;
-
-typedef struct crmna_err {
-  char *error_msg;
-  size_t error_msg_len;
-} crmna_err_t;
 
 typedef enum toot_state {
   CREANUPED,

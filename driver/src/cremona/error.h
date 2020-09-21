@@ -22,9 +22,9 @@ typedef enum cremona_error_level { ERROR, WARN, INFO } cremona_error_level_t;
 typedef struct {
   char error_msg[ERROR_MESSAGE_MAX_ENTRY][ERROR_MESSAGE_ENTRY_LENGTH];
   int curret_line;
-} crmna_err;
+} crmna_err_t;
 
-#define DEFINE_ERROR(name) crmna_err name = {.curret_line = 0}
+#define DEFINE_ERROR(name) crmna_err_t name = {.curret_line = 0}
 
 #define ADD_ERROR(crmna_err, fmt, ...)                                         \
   {                                                                            \

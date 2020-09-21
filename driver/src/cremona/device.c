@@ -63,10 +63,11 @@ bool create_action_from_destroy_device_message(int pid, crmna_buf_t *message,
   return true;
                                                }
 bool destroy_device(store_t *store, action_t *action, crmna_err_t *err){
+  int device_id = action->payload.destroy_device.device_id;
   destroy_device_result_t msg;
-  msg.id = action->payload.destroy_device.device_id;
+  msg.id = device_id;
   DEFINE_CRMNA_BUF(buf, 10)
-  if (!serialize_create_device_result(&msg, &buf)) {
+  if (!serialize_destroy_device_result(&msg, &buf)) {
     detach_device_class(store, action->payload.destroy_device.device_id);
     remove_device(store, action->payload.destroy_device.device_id);
     return false;

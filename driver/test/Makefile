@@ -1,12 +1,12 @@
 COMPILER     = g++
 CFLAGS       = -g -MMD -MP -std=c++17  -Wall -Wextra -Winit-self -Wno-missing-field-initializers -DMPACK_HAS_CONFIG -DCRMNA_TEST
 LIBS         = 
-INCLUDE      = -I../src 
+INCLUDE      = -I../src/cremona
 TEST_INCLUDE = $(INCLUDE) -I.. -Itest -I../third_party/googletest/googletest/include -I../third_party/googletest/googlemock/include 
 TEST_LDFLAGS = $(LDFLAGS) -L../third_party/googletest/lib -lgmock_main -lgtest -lgmock  -lpthread 
 TRGETDIR     = $(CURDIR)/../../build/driver/test/bin
 TARGET       = $(TRGETDIR)/driver_test
-SRCROOT      = ../src
+SRCROOT      = ../src/cremona
 TESTROOT     = .
 SRCDIRS     := $(shell find $(SRCROOT) -type d)
 SOURCES      = $(filter-out %/main.c, $(foreach dir, $(SRCDIRS), $(wildcard $(dir)/*.c)))

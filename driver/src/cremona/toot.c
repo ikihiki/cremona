@@ -88,7 +88,7 @@ bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err) {
   msg.device_id = device_id;
   msg.toot_id = action->payload.add_toot_element.toot_id;
   msg.element_id = element_id;
-  msg.text = action->payload.add_toot_element.text;
+  msg.text = action->payload.add_toot_element.text->buf;
 
   DEFINE_CRMNA_BUF(buf, 10)
   if (!serialize_add_toot_text(&msg, &buf)) {

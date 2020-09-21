@@ -13,4 +13,7 @@ typedef struct crmna_buf {
   crmna_buf_t name = {                                                         \
       .buf = name##_buffer_content, .buf_size = size, .used_size = 0};
 
+#define DEFINE_CRMNA_BUF_FROM_MEMORY(name, address, size)                      \
+  crmna_buf_t name = {.buf = address, .buf_size = size, .used_size = size}
+
 #endif

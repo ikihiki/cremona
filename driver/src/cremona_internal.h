@@ -28,9 +28,7 @@ void delete_device(cremona_device_manager_t *device_manager, uint64_t id);
 
 // device
 cremona_device_t *add_ref_device(cremona_device_t *device);
-cremona_device_t *create_device(uint64_t id, uint32_t pid, uint32_t uid, char *name,
-                                cremona_device_manager_t *device_manager,
-                                crmna_err_t *error);
+
 void cremona_device_lock(cremona_device_t *device);
 void cremona_device_unlock(cremona_device_t *device);
 cremona_device_t *get_cremona_device(cremona_device_manager_t *device_manager,

@@ -79,14 +79,14 @@
             "label": "test-watch",
             "command": "make",
             "args": [
-                "watch",
+                "watch-test",
             ],
             "options": {
                 "env": {
                     "LC_ALL": "C",
                     "LANG": "C"
                 },
-                "cwd": "${workspaceFolder}/test"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [
                 {
