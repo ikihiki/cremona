@@ -84,7 +84,15 @@
 			"chrono": "cpp",
 			"condition_variable": "cpp",
 			"ratio": "cpp",
-			"thread": "cpp"
+			"thread": "cpp",
+			"cassert": "c",
+			"cerrno": "c",
+			"cfloat": "c",
+			"climits": "c",
+			"ios": "c",
+			"locale": "c",
+			"queue": "c",
+			"cstdbool": "c"
 		},
 		"files.autoSave": "afterDelay",
 		"editor.formatOnSave": true,

@@ -1,14 +1,14 @@
 #include "central_store.h"
 #include "message.h"
 
-bool create_action_create_toot(int device_id, action_t *action,
+bool create_action_create_toot(unsigned int device_id, action_t *action,
                                crmna_err_t *err) {
   action->type = CREATE_TOOT;
   action->payload.create_toot.device_id = device_id;
   return true;
 }
 bool create_toot(store_t *store, action_t *action, crmna_err_t *err) {
-  int toot_id;
+  unsigned int toot_id;
   if (!add_toot(store, action->payload.create_toot.device_id, &toot_id, err)) {
     return false;
   }
@@ -51,7 +51,7 @@ bool create_action_from_create_toot_result_message(int pid,
   return true;
 }
 bool create_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
-  int device_id = get_device_id_from_toot(
+  unsigned int device_id = get_device_id_from_toot(
       store, action->payload.create_toot_result.toot_id);
   int pid = get_device_pid_from_toot(
       store, action->payload.create_toot_result.toot_id);
@@ -68,7 +68,7 @@ bool create_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
   return true;
 }
 
-bool create_action_add_toot_element(int toot_id, crmna_buf_t *txet,
+bool create_action_add_toot_element(unsigned int toot_id, crmna_buf_t *txet,
                                     action_t *action, crmna_err_t *err) {
   action->type = ADD_TOOT_ELEMENT;
   action->payload.add_toot_element.toot_id = toot_id;
@@ -76,12 +76,12 @@ bool create_action_add_toot_element(int toot_id, crmna_buf_t *txet,
   return true;
 }
 bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err) {
-  int element_id;
+  unsigned int element_id;
   if (!add_element(store, action->payload.add_toot_element.toot_id, &element_id,
                    err)) {
     return false;
   }
-  int device_id = get_device_id_from_toot(
+  unsigned int device_id = get_device_id_from_toot(
       store, action->payload.create_toot_result.toot_id);
 
   add_toot_text_t msg;
@@ -127,7 +127,7 @@ bool create_action_from_add_toot_element_result_message(int pid,
 }
 bool add_toot_element_result(store_t *store, action_t *action,
                              crmna_err_t *err) {
-  int device_id = get_device_id_from_toot(
+  unsigned int device_id = get_device_id_from_toot(
       store, action->payload.add_toot_element_result.toot_id);
   int pid = get_device_pid_from_toot(
       store, action->payload.add_toot_element_result.toot_id);
@@ -145,13 +145,14 @@ bool add_toot_element_result(store_t *store, action_t *action,
   return true;
 }
 
-bool create_action_send_toot(int toot_id, action_t *action, crmna_err_t *err) {
+bool create_action_send_toot(unsigned int toot_id, action_t *action,
+                             crmna_err_t *err) {
   action->type = SEND_TOOT;
   action->payload.send_toot.toot_id = toot_id;
   return true;
 }
 bool send_toot(store_t *store, action_t *action, crmna_err_t *err) {
-  int device_id = get_device_id_from_toot(
+  unsigned int device_id = get_device_id_from_toot(
       store, action->payload.create_toot_result.toot_id);
 
   send_toot_t msg;
@@ -195,7 +196,7 @@ bool create_action_from_send_toot_result_message(int pid, crmna_buf_t *message,
   return true;
 }
 bool send_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
-  int device_id =
+  unsigned int device_id =
       get_device_id_from_toot(store, action->payload.send_toot_result.toot_id);
   int pid =
       get_device_pid_from_toot(store, action->payload.send_toot_result.toot_id);

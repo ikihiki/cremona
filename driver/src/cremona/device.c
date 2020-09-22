@@ -16,7 +16,7 @@ bool create_action_from_create_device_message(int pid, crmna_buf_t *message,
 }
 
 bool create_device(store_t *store, action_t *action, crmna_err_t *err) {
-  int device_id;
+  unsigned int device_id;
   bool result = add_device(store, action->payload.create_device.pid,
                            action->payload.create_device.uid,
                            action->payload.create_device.name, &device_id, err);
@@ -61,9 +61,9 @@ bool create_action_from_destroy_device_message(int pid, crmna_buf_t *message,
   action->payload.destroy_device.pid = pid;
   action->payload.destroy_device.device_id = payload.id;
   return true;
-                                               }
-bool destroy_device(store_t *store, action_t *action, crmna_err_t *err){
-  int device_id = action->payload.destroy_device.device_id;
+}
+bool destroy_device(store_t *store, action_t *action, crmna_err_t *err) {
+  unsigned int device_id = action->payload.destroy_device.device_id;
   destroy_device_result_t msg;
   msg.id = device_id;
   DEFINE_CRMNA_BUF(buf, 10)

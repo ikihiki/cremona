@@ -21,7 +21,7 @@ typedef struct get_stats_result {
   int total_open_toot;
 } get_stats_result_t;
 bool serialize_get_stats_result(const get_stats_result_t *data,
-                                  crmna_buf_t *dest);
+                                crmna_buf_t *dest);
 
 #define CRMNA_CREATE_DEVICE (NLMSG_MIN_TYPE * 4)
 #define CRMNA_CREATE_DEVICE_RESULT (NLMSG_MIN_TYPE * 5)
@@ -77,7 +77,7 @@ bool deserialize_new_toot_result(const crmna_buf_t *data,
 typedef struct add_toot_text {
   uint64_t toot_id;
   uint64_t device_id;
-  int element_id;
+  unsigned int element_id;
   char *text;
 } add_toot_text_t;
 typedef struct add_toot_text_result {
