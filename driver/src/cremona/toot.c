@@ -1,12 +1,17 @@
 #include "central_store.h"
 #include "message.h"
 
-bool create_action_create_toot(unsigned int device_id, action_t *action,
-                               crmna_err_t *err) {
-  action->type = CREATE_TOOT;
-  action->payload.create_toot.device_id = device_id;
-  return true;
+action_t create_action_create_toot(unsigned int device_id,
+                                   set_toot_id_func set_toot_id,
+                                   void *set_toot_id_context) {
+  action_t action;
+  action.type = CREATE_TOOT;
+  action.payload.create_toot.device_id = device_id;
+  action.payload.create_toot.set_toot_id = set_toot_id;
+  action.payload.create_toot.set_toot_id_context = set_toot_id_context;
+  return action;
 }
+
 bool create_toot(store_t *store, action_t *action, crmna_err_t *err) {
   unsigned int toot_id;
   if (!add_toot(store, action->payload.create_toot.device_id, &toot_id, err)) {
@@ -68,12 +73,12 @@ bool create_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
   return true;
 }
 
-bool create_action_add_toot_element(unsigned int toot_id, crmna_buf_t *txet,
-                                    action_t *action, crmna_err_t *err) {
-  action->type = ADD_TOOT_ELEMENT;
-  action->payload.add_toot_element.toot_id = toot_id;
-  action->payload.add_toot_element.text = txet;
-  return true;
+action_t create_action_add_toot_element(unsigned int toot_id, crmna_buf_t *txet,) {
+  action_t action;
+  action.type = ADD_TOOT_ELEMENT;
+  action.payload.add_toot_element.toot_id = toot_id;
+  action.payload.add_toot_element.text = txet;
+  return action;
 }
 bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err) {
   unsigned int element_id;
@@ -145,11 +150,11 @@ bool add_toot_element_result(store_t *store, action_t *action,
   return true;
 }
 
-bool create_action_send_toot(unsigned int toot_id, action_t *action,
-                             crmna_err_t *err) {
-  action->type = SEND_TOOT;
-  action->payload.send_toot.toot_id = toot_id;
-  return true;
+action_t create_action_send_toot(unsigned int toot_id) {
+  action_t action;
+  action.type = SEND_TOOT;
+  action.payload.send_toot.toot_id = toot_id;
+  return action;
 }
 bool send_toot(store_t *store, action_t *action, crmna_err_t *err) {
   unsigned int device_id = get_device_id_from_toot(

@@ -29,11 +29,17 @@ bool create_action_from_create_device_message(int pid, crmna_buf_t *message,
                                               crmna_err_t *err);
 bool create_device(store_t *store, action_t *action, crmna_err_t *err);
 
+typedef bool (*set_toot_id_func)(unsigned int toot_id,
+                                 void *set_toot_id_context, crmna_err_t *err));
+
 typedef struct create_toot_payload {
   unsigned int device_id;
+  set_toot_id_func set_toot_id;
+  void *set_toot_id_context;
 } create_toot_payload_t;
-bool create_action_create_toot(unsigned int device_id, action_t *action,
-                               crmna_err_t *err);
+action_t create_action_create_toot(unsigned int device_id,
+                                   set_toot_id_func set_toot_id,
+                                   void *set_toot_id_context);
 bool create_toot(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef struct create_toot_result_payload {
@@ -52,8 +58,7 @@ typedef struct add_toot_element_payload {
   unsigned int toot_id;
   crmna_buf_t *text;
 } add_toot_element_payload_t;
-bool create_action_add_toot_element(unsigned int toot_id, crmna_buf_t *txet,
-                                    action_t *action, crmna_err_t *err);
+action_t create_action_add_toot_element(unsigned int toot_id, crmna_buf_t *txet);
 bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef struct add_toot_element_result_payload {
@@ -73,8 +78,7 @@ bool add_toot_element_result(store_t *store, action_t *action,
 typedef struct send_toot_payload {
   unsigned int toot_id;
 } send_toot_payload_t;
-bool create_action_send_toot(unsigned int toot_id, action_t *action,
-                             crmna_err_t *err);
+action_t create_action_send_toot(unsigned int toot_id);
 bool send_toot(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef struct send_toot_result_payload {
@@ -134,7 +138,8 @@ bool wait_toot_sent_or_failer(store_t *store, unsigned int toot_id,
 void set_toot_failer(store_t *store, unsigned int toot_id);
 void set_toot_ready(store_t *store, unsigned int toot_id);
 void set_toot_sent(store_t *store, unsigned int toot_id);
-bool get_device_id_from_toot(store_t *store, unsigned int toot_id, unsigned int *device_id);
+bool get_device_id_from_toot(store_t *store, unsigned int toot_id,
+                             unsigned int *device_id);
 bool get_device_pid_from_toot(store_t *store, unsigned int toot_id, int *pid);
 
 bool add_element(store_t *store, unsigned int toot_id, unsigned int *element_id,

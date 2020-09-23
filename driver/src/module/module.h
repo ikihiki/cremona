@@ -6,4 +6,6 @@ store_t *create_store(unsigned int miner_min, unsigned int miner_max,
                       const char *driver_name);
 void destroy_store(store_t *store);
 
+void printk_err(crmna_err_t *err);
+
 #endif

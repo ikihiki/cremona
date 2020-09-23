@@ -2,7 +2,9 @@
 #define __CREMONA_NET_LINK_COMMUNICATOR__
 
 #include "../cremona/commuinicator.h"
+#include "../cremona/central_store.h"
 
-communicator_ref_t create_communicator(void);
+bool create_communicator_and_register_store(int port, store_t *store,
+                                            communicator_ref_t *ref);
 
 #endif
