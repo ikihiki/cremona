@@ -1,7 +1,7 @@
+#include "module.h"
 #include "store_internal.h"
 
-bool check_toot_ready(store_t *store, unsigned int toot_id,
-                             crmna_err_t *err) {
+bool check_toot_ready(store_t *store, unsigned int toot_id, crmna_err_t *err) {
   toot_store_t *toot = (toot_store_t *)idr_find(&store->toots, toot_id);
   if (toot == NULL) {
     ADD_ERROR(err, "canot find id.");
@@ -9,7 +9,7 @@ bool check_toot_ready(store_t *store, unsigned int toot_id,
   }
 
   spin_lock(&toot->spinlock);
-  if (!toot->state == OPEND) {
+  if (toot->state != OPEND) {
     spin_unlock(&toot->spinlock);
     ADD_ERROR(err, "toot is not ready");
     return false;
@@ -21,7 +21,7 @@ bool check_toot_ready(store_t *store, unsigned int toot_id,
 }
 
 toot_store_t *get_toot_when_ready(store_t *store, unsigned int toot_id,
-                                         crmna_err_t *err) {
+                                  crmna_err_t *err) {
   toot_store_t *toot = (toot_store_t *)idr_find(&store->toots, toot_id);
   if (toot == NULL) {
     ADD_ERROR(err, "canot find toot id.");
@@ -66,7 +66,7 @@ bool add_toot(store_t *store, unsigned int device_id, unsigned int *toot_id,
 
   unsigned int id = (unsigned int)allocate_result;
   toot_store_t *toot = kmalloc(sizeof(toot_store_t), GFP_KERNEL);
-  if (toot = NULL) {
+  if (toot == NULL) {
     spin_lock(&store->toots_lock);
     idr_remove(&store->toots, id);
     spin_unlock(&store->toots_lock);
@@ -88,24 +88,27 @@ bool add_toot(store_t *store, unsigned int device_id, unsigned int *toot_id,
 void remove_toot(store_t *store, unsigned int toot_id) {
   toot_store_t *toot = (toot_store_t *)idr_find(&store->toots, toot_id);
   if (toot == NULL) {
-    ADD_ERROR(err, "canot find toot id.");
-    return false;
+    return;
   }
-  spin_lock(&store->toots_lock);
-  idr_remove(&store->toots, toot_id);
-  spin_unlock(&store->toots_lock);
+
   spin_lock(&toot->spinlock);
   toot->state = DESTROYED;
   spin_unlock(&toot->spinlock);
   wake_up_interruptible(&toot->wait_head);
-  kfree(toot);
 
   element_store_t *element;
-  int element_id idr_for_each_entry(&store->elements, element, element_id) {
+  int element_id;
+  idr_for_each_entry(&store->elements, element, element_id) {
     if (element->toot_id == toot_id) {
       remove_element(store, element_id);
     }
   }
+
+  spin_lock(&store->toots_lock);
+  idr_remove(&store->toots, toot_id);
+  spin_unlock(&store->toots_lock);
+
+  kfree(toot);
 }
 bool wait_toot_ready_or_failer(store_t *store, unsigned int toot_id,
                                crmna_err_t *err) {
@@ -116,7 +119,7 @@ bool wait_toot_ready_or_failer(store_t *store, unsigned int toot_id,
 
   wait_event_interruptible_timeout(
       toot->wait_head,
-      toot->state == OPEND || toot->state == DESTROYED || toot->state == ERROR,
+      toot->state == OPEND || toot->state == DESTROYED || toot->state == TOOT_ERROR,
       10 * HZ / 1000);
 
   return true;
@@ -129,15 +132,17 @@ bool wait_toot_sent_or_failer(store_t *store, unsigned int toot_id,
   }
 
   wait_event_interruptible_timeout(
-      toot->wait_head, toot->state == DESTROYED || toot->state == ERROR,
+      toot->wait_head, toot->state == DESTROYED || toot->state == TOOT_ERROR,
       10 * HZ / 1000);
 
   return true;
 }
 void set_toot_failer(store_t *store, unsigned int toot_id) {
-  toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
+  DEFINE_ERROR(err);
+  toot_store_t *toot = get_toot_when_ready(store, toot_id, &err);
   if (toot == NULL) {
-    return false;
+    printk_err(&err);
+    return;
   }
 
   spin_lock(&toot->spinlock);
@@ -147,9 +152,11 @@ void set_toot_failer(store_t *store, unsigned int toot_id) {
   wake_up_interruptible(&toot->wait_head);
 }
 void set_toot_ready(store_t *store, unsigned int toot_id) {
-  toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
+  DEFINE_ERROR(err);
+  toot_store_t *toot = get_toot_when_ready(store, toot_id, &err);
   if (toot == NULL) {
-    return false;
+      printk_err(&err);
+      return;
   }
 
   spin_lock(&toot->spinlock);
@@ -159,9 +166,11 @@ void set_toot_ready(store_t *store, unsigned int toot_id) {
   wake_up_interruptible(&toot->wait_head);
 }
 void set_toot_sent(store_t *store, unsigned int toot_id) {
-  toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
+  DEFINE_ERROR(err);
+  toot_store_t *toot = get_toot_when_ready(store, toot_id, &err);
   if (toot == NULL) {
-    return false;
+      printk_err(&err);
+      return;
   }
 
   spin_lock(&toot->spinlock);
@@ -171,7 +180,7 @@ void set_toot_sent(store_t *store, unsigned int toot_id) {
   wake_up_interruptible(&toot->wait_head);
 }
 bool get_device_id_from_toot(store_t *store, unsigned int toot_id,
-                             unsigned int *device_id) {
+                             unsigned int *device_id, crmna_err_t *err) {
   toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
   if (toot == NULL) {
     return false;
@@ -185,7 +194,8 @@ bool get_device_id_from_toot(store_t *store, unsigned int toot_id,
   *device_id = toot->device_id;
   return true;
 }
-bool get_device_pid_from_toot(store_t *store, unsigned int toot_id, int *pid) {
+bool get_device_pid_from_toot(store_t *store, unsigned int toot_id, int *pid,
+                              crmna_err_t *err) {
   toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
   if (toot == NULL) {
     return false;

@@ -1,6 +1,5 @@
 #include "store_internal.h"
 
-
 static void get_ownership(struct device *dev, kuid_t *uid, kgid_t *gid) {
   device_store_t *device_store = container_of(dev, device_store_t, device);
   uid->val = device_store->uid;
@@ -20,7 +19,7 @@ store_t *create_store(unsigned int miner_min, unsigned int miner_max,
   int alloc_ret =
       alloc_chrdev_region(&store->dev, miner_min, miner_max, driver_name);
   if (alloc_ret != 0) {
-    free(store);
+    kfree(store);
     printk(KERN_ERR "alloc_chrdev_region = %d\n", alloc_ret);
     return NULL;
   }
@@ -28,8 +27,8 @@ store_t *create_store(unsigned int miner_min, unsigned int miner_max,
   struct class *device_class = class_create(THIS_MODULE, class_name);
   if (IS_ERR(device_class)) {
     printk(KERN_ERR "class_create\n");
-    unregister_chrdev_region(dev, miner_max);
-    free(store);
+    unregister_chrdev_region(store->dev, miner_max);
+    kfree(store);
     return false;
   }
   store->device_class = device_class;
@@ -49,7 +48,20 @@ store_t *create_store(unsigned int miner_min, unsigned int miner_max,
   return store;
 }
 
-void destroy_store(store_t *store) {}
+void destroy_store(store_t *store) {
+
+  device_store_t *device;
+  unsigned int device_id;
+  idr_for_each_entry(&store->devices, device, device_id) {
+    remove_device(store, device_id);
+  }
+  idr_destroy(&store->devices);
+  idr_destroy(&store->toots);
+  idr_destroy(&store->elements);
+  class_destroy(store->device_class);
+  unregister_chrdev_region(store->dev, store->miner_max);
+  kfree(store);
+}
 
 communicator_ref_t get_communicator(store_t *store) {
   return store->communicator;
@@ -59,11 +71,11 @@ void set_communicator(store_t *store, communicator_ref_t communicator) {
   store->communicator = communicator;
 }
 
-void printk_err(crmna_err_t *err){
-  if(err == NULL){
+void printk_err(crmna_err_t *err) {
+  if (err == NULL) {
     return;
   }
-  for (int i = 0; i < err->curret_line; err++){
+  for (int i = 0; i < err->curret_line; err++) {
     printk(KERN_ERR "CREMONA: %s", err->error_msg[i]);
   }
 }

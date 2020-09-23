@@ -1,4 +1,5 @@
 #include "store_internal.h"
+#include "module.h"
 
 element_store_t *get_element_when_ready(store_t *store,
                                                unsigned int element_id,
@@ -49,11 +50,11 @@ bool add_element(store_t *store, unsigned int toot_id, unsigned int *element_id,
 
   unsigned int id = (unsigned int)allocate_result;
   element_store_t *element = kmalloc(sizeof(element_store_t), GFP_KERNEL);
-  if (toot = NULL) {
+  if (element == NULL) {
     spin_lock(&store->elements_lock);
     idr_remove(&store->elements, id);
     spin_unlock(&store->elements_lock);
-    ADD_ERROR(err, "canot allocate toot. fail malloc");
+    ADD_ERROR(err, "canot allocate element. fail malloc");
     return false;
   }
 
@@ -74,7 +75,7 @@ void remove_element(store_t *store, unsigned int element_id) {
   }
   idr_remove(&store->elements, element_id);
   spin_lock(&element->spinlock);
-  toot->state = ELEMENT_CREANUPED;
+  element->state = ELEMENT_CREANUPED;
   spin_unlock(&element->spinlock);
   wake_up_interruptible(&element->wait_head);
 
@@ -91,27 +92,32 @@ bool wait_element_sent_or_failer(store_t *store, unsigned int element_id,
                                        element->state == ELEMENT_CREANUPED ||
                                        element->state == ELEMENT_ERROR,
                                    10 * HZ / 1000);
+  return true;
 }
 void set_element_sent(store_t *store, unsigned int element_id) {
-  element_store_t *element = get_element_when_ready(store, element_id, err);
+  DEFINE_ERROR(err);
+  element_store_t *element = get_element_when_ready(store, element_id, &err);
   if (element == NULL) {
-    return false;
+      printk_err(&err);
+      return;
   }
 
   spin_lock(&element->spinlock);
-  toot->state = ELEMENT_SENT;
+  element->state = ELEMENT_SENT;
   spin_unlock(&element->spinlock);
 
   wake_up_interruptible(&element->wait_head);
 }
 void set_element_failer(store_t *store, unsigned int element_id) {
-  element_store_t *element = get_element_when_ready(store, element_id, err);
+  DEFINE_ERROR(err);
+  element_store_t *element = get_element_when_ready(store, element_id, &err);
   if (element == NULL) {
-    return false;
+    printk_err(&err);
+    return;
   }
 
   spin_lock(&element->spinlock);
-  toot->state = ELEMENT_ERROR;
+  element->state = ELEMENT_ERROR;
   spin_unlock(&element->spinlock);
 
   wake_up_interruptible(&element->wait_head);

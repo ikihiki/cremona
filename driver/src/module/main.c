@@ -20,7 +20,7 @@ static int cremona_init(void) {
   if(store == NULL){
     return -EFAULT;
   }
-  if(!create_communicator_and_register_store(17, store, &ref)){
+  if(!create_communicator_and_register_store(17, store, &com)){
     destroy_store(store);
     return -EFAULT;
   }
@@ -29,7 +29,7 @@ static int cremona_init(void) {
 
 static void cremona_exit(void) {
   destroy_store(store);
-  communicator_free(&ref);
+  communicator_free(&com);
   printk("Bye bye my module\n");
 }
 

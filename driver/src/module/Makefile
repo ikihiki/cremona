@@ -1,5 +1,5 @@
 obj-m += cremona.o
-cremona-objs := ../cremona/dispatch.o ../cremona/device.o ../cremona/mpack.o ../cremona/serializer.o device_store.o toot_store.o element_store.o store.o main.o 
+cremona-objs := ../cremona/dispatch.o ../cremona/device.o ../cremona/toot.o ../cremona/communicator.o ../cremona/mpack.o ../cremona/serializer.o device_store.o toot_store.o element_store.o store.o net_link_comm.o main.o 
 
 ccflags-y := -DMPACK_HAS_CONFIG -std=gnu99 -Wno-declaration-after-statement
 

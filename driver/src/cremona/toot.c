@@ -56,10 +56,17 @@ bool create_action_from_create_toot_result_message(int pid,
   return true;
 }
 bool create_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
-  unsigned int device_id = get_device_id_from_toot(
-      store, action->payload.create_toot_result.toot_id);
-  int pid = get_device_pid_from_toot(
-      store, action->payload.create_toot_result.toot_id);
+  unsigned int device_id;
+
+  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
+                              &device_id, err)) {
+    return false;
+  }
+  int pid;
+  if (get_device_pid_from_toot(
+          store, action->payload.create_toot_result.toot_id, &pid, err)) {
+    return false;
+  }
   if (pid == action->payload.create_toot_result.pid &&
       device_id != action->payload.create_toot_result.device_id) {
     return false;
@@ -73,7 +80,8 @@ bool create_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
   return true;
 }
 
-action_t create_action_add_toot_element(unsigned int toot_id, crmna_buf_t *txet,) {
+action_t create_action_add_toot_element(unsigned int toot_id,
+                                        crmna_buf_t *txet) {
   action_t action;
   action.type = ADD_TOOT_ELEMENT;
   action.payload.add_toot_element.toot_id = toot_id;
@@ -86,8 +94,11 @@ bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err) {
                    err)) {
     return false;
   }
-  unsigned int device_id = get_device_id_from_toot(
-      store, action->payload.create_toot_result.toot_id);
+  unsigned int device_id;
+  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
+                              &device_id, err)) {
+    return false;
+  }
 
   add_toot_text_t msg;
   msg.device_id = device_id;
@@ -132,10 +143,16 @@ bool create_action_from_add_toot_element_result_message(int pid,
 }
 bool add_toot_element_result(store_t *store, action_t *action,
                              crmna_err_t *err) {
-  unsigned int device_id = get_device_id_from_toot(
-      store, action->payload.add_toot_element_result.toot_id);
-  int pid = get_device_pid_from_toot(
-      store, action->payload.add_toot_element_result.toot_id);
+  unsigned int device_id;
+  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
+                              &device_id, err)) {
+    return false;
+  }
+  int pid;
+  if (get_device_pid_from_toot(
+          store, action->payload.create_toot_result.toot_id, &pid, err)) {
+    return false;
+  }
   if (pid == action->payload.add_toot_element_result.pid &&
       device_id != action->payload.add_toot_element_result.device_id) {
     return false;
@@ -157,9 +174,11 @@ action_t create_action_send_toot(unsigned int toot_id) {
   return action;
 }
 bool send_toot(store_t *store, action_t *action, crmna_err_t *err) {
-  unsigned int device_id = get_device_id_from_toot(
-      store, action->payload.create_toot_result.toot_id);
-
+  unsigned int device_id;
+  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
+                              &device_id, err)) {
+    return false;
+  }
   send_toot_t msg;
   msg.device_id = device_id;
   msg.toot_id = action->payload.add_toot_element.toot_id;
@@ -201,10 +220,16 @@ bool create_action_from_send_toot_result_message(int pid, crmna_buf_t *message,
   return true;
 }
 bool send_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
-  unsigned int device_id =
-      get_device_id_from_toot(store, action->payload.send_toot_result.toot_id);
-  int pid =
-      get_device_pid_from_toot(store, action->payload.send_toot_result.toot_id);
+  unsigned int device_id;
+  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
+                              &device_id, err)) {
+    return false;
+  }
+  int pid;
+  if (get_device_pid_from_toot(
+          store, action->payload.create_toot_result.toot_id, &pid, err)) {
+    return false;
+  }
   if (pid == action->payload.send_toot_result.pid &&
       device_id != action->payload.send_toot_result.device_id) {
     return false;

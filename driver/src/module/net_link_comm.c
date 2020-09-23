@@ -12,17 +12,17 @@ typedef struct {
 static int process_recive_data(struct sk_buff *skb, struct nlmsghdr *nlh,
                                struct netlink_ext_ack *ack) {
   DEFINE_ERROR(err);
-  netlink_communicator_t *com =
-      container_of(skb->sk, netlink_communicator_t, nl_sock);
 
+  netlink_communicator_t *com = (netlink_communicator_t *)skb->sk->sk_user_data;
   action_t action;
   DEFINE_CRMNA_BUF_FROM_MEMORY(buf, (char *)nlmsg_data(nlh), nlh->nlmsg_len);
-  if (!create_action_from_message(nlh->nlmsg_type, nlh->nlmsg_pid, &buf, &action, &err)){
+  if (!create_action_from_message(nlh->nlmsg_type, nlh->nlmsg_pid, &buf,
+                                  &action, &err)) {
     printk_err(&err);
     return 1;
   }
   if (!dispatch(com->store, &action, &err)) {
-    printk_err(err);
+    printk_err(&err);
     return 1;
   }
   return 0;
@@ -50,7 +50,7 @@ size_t send_message(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
   NETLINK_CB(skb_out).dst_group = 0; /* not in mcast group */
 
   memcpy(nlmsg_data(nlh), buf->buf, buf->used_size);
-  nlmsg_unicast(context->nl_sock, skb_out, pid);
+  nlmsg_unicast(com->nl_sock, skb_out, pid);
   return 0;
 }
 void free(void *obj) {
@@ -61,19 +61,20 @@ void free(void *obj) {
 
 communicator_t interface = {.send_message = &send_message, .free = &free};
 
-bool create_communicator_and_register_store(int port, store_t *store, communicator_ref_t *ref) {
+bool create_communicator_and_register_store(int port, store_t *store,
+                                            communicator_ref_t *ref) {
   netlink_communicator_t *com =
       kmalloc(sizeof(netlink_communicator_t), GFP_KERNEL);
   if (com == NULL) {
     return false;
   }
-  com->nl_sock = struct sock *nl_sock =
-      netlink_kernel_create(&init_net, port, cfg);
+  com->nl_sock = netlink_kernel_create(&init_net, port, &cfg);
   if (!com->nl_sock) {
     kfree(com);
     return false;
   }
   com->store = store;
+  com->nl_sock->sk_user_data = com;
   ref->obj = com;
   ref->interface = &interface;
   set_communicator(store, *ref);

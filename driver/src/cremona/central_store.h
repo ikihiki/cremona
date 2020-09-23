@@ -30,7 +30,7 @@ bool create_action_from_create_device_message(int pid, crmna_buf_t *message,
 bool create_device(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef bool (*set_toot_id_func)(unsigned int toot_id,
-                                 void *set_toot_id_context, crmna_err_t *err));
+                                 void *set_toot_id_context, crmna_err_t *err);
 
 typedef struct create_toot_payload {
   unsigned int device_id;
@@ -139,8 +139,9 @@ void set_toot_failer(store_t *store, unsigned int toot_id);
 void set_toot_ready(store_t *store, unsigned int toot_id);
 void set_toot_sent(store_t *store, unsigned int toot_id);
 bool get_device_id_from_toot(store_t *store, unsigned int toot_id,
-                             unsigned int *device_id);
-bool get_device_pid_from_toot(store_t *store, unsigned int toot_id, int *pid);
+                             unsigned int *device_id, crmna_err_t *err);
+bool get_device_pid_from_toot(store_t *store, unsigned int toot_id, int *pid,
+                              crmna_err_t *err);
 
 bool add_element(store_t *store, unsigned int toot_id, unsigned int *element_id,
                  crmna_err_t *err);

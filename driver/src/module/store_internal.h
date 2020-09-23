@@ -2,7 +2,7 @@
 #define __CREMONA__STORE_INTERNAL__
 
 #include "../cremona/central_store.h"
-#include <linux / spinlock.h>
+#include <linux/spinlock.h>
 #include <linux/cdev.h>
 #include <linux/fs.h>
 #include <linux/idr.h>
