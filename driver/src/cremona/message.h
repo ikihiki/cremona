@@ -30,7 +30,7 @@ typedef struct create_device {
   uint32_t uid;
 } create_device_t;
 typedef struct create_device_result {
-  uint64_t id;
+  uint32_t id;
 } create_device_result_t;
 bool serialize_create_device_result(const create_device_result_t *data,
                                     crmna_buf_t *dest);
@@ -41,10 +41,10 @@ bool deserialize_create_conn(const crmna_buf_t *data, create_device_t *result);
 #define CRMNA_DESTROY_DEVICE_RESULT                                            \
   (NLMSG_MIN_TYPE * 7) // + 2 is arbitrary. same value for kern/usr
 typedef struct destroy_device {
-  uint64_t id;
+  uint32_t id;
 } destroy_device_t;
 typedef struct destroy_device_result {
-  uint64_t id;
+  uint32_t id;
 } destroy_device_result_t;
 bool serialize_destroy_device_result(const destroy_device_result_t *data,
                                      crmna_buf_t *dest);
@@ -57,13 +57,13 @@ bool deserialize_destroy_device(const crmna_buf_t *data,
   (NLMSG_MIN_TYPE * 9) // + 2 is arbitrary. same value for kern/usr
 
 typedef struct new_toot {
-  uint64_t toot_id;
-  uint64_t device_id;
+  uint32_t toot_id;
+  uint32_t device_id;
 } new_toot_t;
 
 typedef struct new_toot_result {
-  uint64_t toot_id;
-  uint64_t device_id;
+  uint32_t toot_id;
+  uint32_t device_id;
   int result;
 } new_toot_result_t;
 
@@ -75,14 +75,14 @@ bool deserialize_new_toot_result(const crmna_buf_t *data,
 #define CRMNA_ADD_TOOT_TEXT_RESULT (NLMSG_MIN_TYPE * 11)
 
 typedef struct add_toot_text {
-  uint64_t toot_id;
-  uint64_t device_id;
-  unsigned int element_id;
+  uint32_t toot_id;
+  uint32_t device_id;
+  uint32_t element_id;
   char *text;
 } add_toot_text_t;
 typedef struct add_toot_text_result {
-  uint64_t toot_id;
-  uint64_t device_id;
+  uint32_t toot_id;
+  uint32_t device_id;
   int result;
 } add_toot_text_result_t;
 
@@ -93,12 +93,12 @@ bool deserialize_add_toot_text_result(const crmna_buf_t *data,
 #define CRMNA_SEND_TOOT (NLMSG_MIN_TYPE * 12)
 #define CRMNA_SEND_TOOT_RESULT (NLMSG_MIN_TYPE * 13)
 typedef struct send_toot {
-  uint64_t toot_id;
-  uint64_t device_id;
+  uint32_t toot_id;
+  uint32_t device_id;
 } send_toot_t;
 typedef struct send_toot_result {
-  uint64_t toot_id;
-  uint64_t device_id;
+  uint32_t toot_id;
+  uint32_t device_id;
   int result;
 } send_toot_result_t;
 

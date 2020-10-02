@@ -8,9 +8,9 @@ import (
 )
 
 type AddTootText struct {
-	TootId   uint64
-	DeviceId uint64
-	Text string
+	TootId   uint32
+	DeviceId uint32
+	Text     string
 }
 
 func (mes *AddTootText) GetMessageTypeId() uint16 {
@@ -18,7 +18,7 @@ func (mes *AddTootText) GetMessageTypeId() uint16 {
 }
 
 func GetAddTootTextMessageTypeId() uint16 {
-	return unix.NLMSG_MIN_TYPE *10
+	return unix.NLMSG_MIN_TYPE * 10
 }
 
 func DeserializeAddTootText(data []byte) (*AddTootText, error) {
@@ -31,13 +31,13 @@ func DeserializeAddTootText(data []byte) (*AddTootText, error) {
 }
 
 type AddTootTextResult struct {
-	TootId   uint64
-	DeviceId uint64
-	Result int
+	TootId   uint32
+	DeviceId uint32
+	Result   int
 }
 
 func (this *AddTootTextResult) GetMessageTypeId() uint16 {
-	return unix.NLMSG_MIN_TYPE *11
+	return unix.NLMSG_MIN_TYPE * 11
 }
 func (this *AddTootTextResult) GetFlags() uint16 {
 	return 0

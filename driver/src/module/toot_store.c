@@ -1,7 +1,7 @@
 #include "module.h"
 #include "store_internal.h"
 
-bool check_toot_ready(store_t *store, unsigned int toot_id, crmna_err_t *err) {
+bool check_toot_ready(store_t *store, uint32_t toot_id, crmna_err_t *err) {
   toot_store_t *toot = (toot_store_t *)idr_find(&store->toots, toot_id);
   if (toot == NULL) {
     ADD_ERROR(err, "canot find id.");
@@ -14,13 +14,13 @@ bool check_toot_ready(store_t *store, unsigned int toot_id, crmna_err_t *err) {
     ADD_ERROR(err, "toot is not ready");
     return false;
   }
-  unsigned int device_id = toot->device_id;
+  uint32_t device_id = toot->device_id;
   spin_unlock(&toot->spinlock);
 
   return check_device_ready(store, device_id, err);
 }
 
-toot_store_t *get_toot_when_ready(store_t *store, unsigned int toot_id,
+toot_store_t *get_toot_when_ready(store_t *store, uint32_t toot_id,
                                   crmna_err_t *err) {
   toot_store_t *toot = (toot_store_t *)idr_find(&store->toots, toot_id);
   if (toot == NULL) {
@@ -35,7 +35,7 @@ toot_store_t *get_toot_when_ready(store_t *store, unsigned int toot_id,
     ADD_ERROR(err, "toot is not ready");
     return NULL;
   }
-  unsigned int device_id = toot->device_id;
+  uint32_t device_id = toot->device_id;
   spin_unlock(&toot->spinlock);
 
   if (!check_device_ready(store, device_id, err)) {
@@ -44,7 +44,7 @@ toot_store_t *get_toot_when_ready(store_t *store, unsigned int toot_id,
   return toot;
 }
 
-bool add_toot(store_t *store, unsigned int device_id, unsigned int *toot_id,
+bool add_toot(store_t *store, uint32_t device_id, uint32_t *toot_id,
               crmna_err_t *err) {
   if (!check_device_ready(store, device_id, err)) {
     return false;
@@ -52,19 +52,25 @@ bool add_toot(store_t *store, unsigned int device_id, unsigned int *toot_id,
 
   idr_preload(GFP_KERNEL);
   spin_lock(&store->toots_lock);
-  int allocate_result = idr_alloc(&store->toots, NULL, 0, INT_MAX, GFP_KERNEL);
+  uint32_t id = 0;
+  int allocate_result =
+      idr_alloc_u32(&store->toots, NULL, &id, INT_MAX, GFP_KERNEL);
   spin_unlock(&store->toots_lock);
   idr_preload_end();
-  if (allocate_result == -ENOMEM) {
+  switch (allocate_result) {
+  case 0:
+    break;
+  case -ENOMEM:
     ADD_ERROR(err, "canot allocate toot. because no memory");
     return false;
-  }
-  if (allocate_result == -ENOSPC) {
+  case -ENOSPC:
     ADD_ERROR(err, "canot allocate toot. because no id space");
     return false;
+  default:
+    ADD_ERROR(err, "canot allocate toot. because something worng");
+    return false;
   }
-
-  unsigned int id = (unsigned int)allocate_result;
+  
   toot_store_t *toot = kmalloc(sizeof(toot_store_t), GFP_KERNEL);
   if (toot == NULL) {
     spin_lock(&store->toots_lock);
@@ -85,7 +91,7 @@ bool add_toot(store_t *store, unsigned int device_id, unsigned int *toot_id,
   return true;
 }
 
-void remove_toot(store_t *store, unsigned int toot_id) {
+void remove_toot(store_t *store, uint32_t toot_id) {
   toot_store_t *toot = (toot_store_t *)idr_find(&store->toots, toot_id);
   if (toot == NULL) {
     return;
@@ -110,21 +116,22 @@ void remove_toot(store_t *store, unsigned int toot_id) {
 
   kfree(toot);
 }
-bool wait_toot_ready_or_failer(store_t *store, unsigned int toot_id,
+bool wait_toot_ready_or_failer(store_t *store, uint32_t toot_id,
                                crmna_err_t *err) {
   toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
   if (toot == NULL) {
     return false;
   }
 
-  wait_event_interruptible_timeout(
-      toot->wait_head,
-      toot->state == OPEND || toot->state == DESTROYED || toot->state == TOOT_ERROR,
-      10 * HZ / 1000);
+  wait_event_interruptible_timeout(toot->wait_head,
+                                   toot->state == OPEND ||
+                                       toot->state == DESTROYED ||
+                                       toot->state == TOOT_ERROR,
+                                   10 * HZ / 1000);
 
   return true;
 }
-bool wait_toot_sent_or_failer(store_t *store, unsigned int toot_id,
+bool wait_toot_sent_or_failer(store_t *store, uint32_t toot_id,
                               crmna_err_t *err) {
   toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
   if (toot == NULL) {
@@ -137,7 +144,7 @@ bool wait_toot_sent_or_failer(store_t *store, unsigned int toot_id,
 
   return true;
 }
-void set_toot_failer(store_t *store, unsigned int toot_id) {
+void set_toot_failer(store_t *store, uint32_t toot_id) {
   DEFINE_ERROR(err);
   toot_store_t *toot = get_toot_when_ready(store, toot_id, &err);
   if (toot == NULL) {
@@ -151,12 +158,12 @@ void set_toot_failer(store_t *store, unsigned int toot_id) {
 
   wake_up_interruptible(&toot->wait_head);
 }
-void set_toot_ready(store_t *store, unsigned int toot_id) {
+void set_toot_ready(store_t *store, uint32_t toot_id) {
   DEFINE_ERROR(err);
   toot_store_t *toot = get_toot_when_ready(store, toot_id, &err);
   if (toot == NULL) {
-      printk_err(&err);
-      return;
+    printk_err(&err);
+    return;
   }
 
   spin_lock(&toot->spinlock);
@@ -165,12 +172,12 @@ void set_toot_ready(store_t *store, unsigned int toot_id) {
 
   wake_up_interruptible(&toot->wait_head);
 }
-void set_toot_sent(store_t *store, unsigned int toot_id) {
+void set_toot_sent(store_t *store, uint32_t toot_id) {
   DEFINE_ERROR(err);
   toot_store_t *toot = get_toot_when_ready(store, toot_id, &err);
   if (toot == NULL) {
-      printk_err(&err);
-      return;
+    printk_err(&err);
+    return;
   }
 
   spin_lock(&toot->spinlock);
@@ -179,8 +186,8 @@ void set_toot_sent(store_t *store, unsigned int toot_id) {
 
   wake_up_interruptible(&toot->wait_head);
 }
-bool get_device_id_from_toot(store_t *store, unsigned int toot_id,
-                             unsigned int *device_id, crmna_err_t *err) {
+bool get_device_id_from_toot(store_t *store, uint32_t toot_id,
+                             uint32_t *device_id, crmna_err_t *err) {
   toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
   if (toot == NULL) {
     return false;
@@ -194,7 +201,7 @@ bool get_device_id_from_toot(store_t *store, unsigned int toot_id,
   *device_id = toot->device_id;
   return true;
 }
-bool get_device_pid_from_toot(store_t *store, unsigned int toot_id, int *pid,
+bool get_device_pid_from_toot(store_t *store, uint32_t toot_id, int *pid,
                               crmna_err_t *err) {
   toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
   if (toot == NULL) {

@@ -8,8 +8,8 @@ import (
 )
 
 type SendToot struct {
-	TootId   uint64
-	DeviceId uint64
+	TootId   uint32
+	DeviceId uint32
 }
 
 func (mes *SendToot) GetMessageTypeId() uint16 {
@@ -30,8 +30,8 @@ func DeserializeSendToot(data []byte) (*SendToot, error) {
 }
 
 type SendTootResult struct {
-	TootId   uint64
-	DeviceId uint64
+	TootId   uint32
+	DeviceId uint32
 	Result   int
 }
 

@@ -29,23 +29,23 @@ bool create_action_from_create_device_message(int pid, crmna_buf_t *message,
                                               crmna_err_t *err);
 bool create_device(store_t *store, action_t *action, crmna_err_t *err);
 
-typedef bool (*set_toot_id_func)(unsigned int toot_id,
-                                 void *set_toot_id_context, crmna_err_t *err);
+typedef bool (*set_toot_id_func)(uint32_t toot_id, void *set_toot_id_context,
+                                 crmna_err_t *err);
 
 typedef struct create_toot_payload {
-  unsigned int device_id;
+  uint32_t device_id;
   set_toot_id_func set_toot_id;
   void *set_toot_id_context;
 } create_toot_payload_t;
-action_t create_action_create_toot(unsigned int device_id,
+action_t create_action_create_toot(uint32_t device_id,
                                    set_toot_id_func set_toot_id,
                                    void *set_toot_id_context);
 bool create_toot(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef struct create_toot_result_payload {
   int pid;
-  unsigned int device_id;
-  unsigned int toot_id;
+  uint32_t device_id;
+  uint32_t toot_id;
   int result;
 } create_toot_result_payload_t;
 bool create_action_from_create_toot_result_message(int pid,
@@ -55,17 +55,17 @@ bool create_action_from_create_toot_result_message(int pid,
 bool create_toot_result(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef struct add_toot_element_payload {
-  unsigned int toot_id;
+  uint32_t toot_id;
   crmna_buf_t *text;
 } add_toot_element_payload_t;
-action_t create_action_add_toot_element(unsigned int toot_id, crmna_buf_t *txet);
+action_t create_action_add_toot_element(uint32_t toot_id, crmna_buf_t *txet);
 bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef struct add_toot_element_result_payload {
   int pid;
-  unsigned int device_id;
-  unsigned int toot_id;
-  unsigned int element_id;
+  uint32_t device_id;
+  uint32_t toot_id;
+  uint32_t element_id;
   int result;
 } add_toot_element_result_payload_t;
 bool create_action_from_add_toot_element_result_message(int pid,
@@ -76,15 +76,15 @@ bool add_toot_element_result(store_t *store, action_t *action,
                              crmna_err_t *err);
 
 typedef struct send_toot_payload {
-  unsigned int toot_id;
+  uint32_t toot_id;
 } send_toot_payload_t;
-action_t create_action_send_toot(unsigned int toot_id);
+action_t create_action_send_toot(uint32_t toot_id);
 bool send_toot(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef struct send_toot_result_payload {
   int pid;
-  unsigned int device_id;
-  unsigned int toot_id;
+  uint32_t device_id;
+  uint32_t toot_id;
   int result;
 } send_toot_result_payload_t;
 bool create_action_from_send_toot_result_message(int pid, crmna_buf_t *message,
@@ -94,7 +94,7 @@ bool send_toot_result(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef struct destroy_device_payload {
   int pid;
-  unsigned int device_id;
+  uint32_t device_id;
 } destroy_device_payload_t;
 bool create_action_from_destroy_device_message(int pid, crmna_buf_t *message,
                                                action_t *action,
@@ -120,34 +120,33 @@ bool create_action_from_message(int type, int pid, crmna_buf_t *message,
                                 action_t *action, crmna_err_t *err);
 bool add_device(store_t *store, int pid, int uid, char *name, int *id,
                 crmna_err_t *err);
-void remove_device(store_t *store, unsigned int device_id);
-bool attach_device_class(store_t *store, unsigned int device_id,
-                         crmna_err_t *err);
-void detach_device_class(store_t *store, unsigned int device_id);
-void set_device_ready(store_t *store, unsigned int device_id);
+void remove_device(store_t *store, uint32_t device_id);
+bool attach_device_class(store_t *store, uint32_t device_id, crmna_err_t *err);
+void detach_device_class(store_t *store, uint32_t device_id);
+void set_device_ready(store_t *store, uint32_t device_id);
 communicator_ref_t get_communicator(store_t *store);
 void set_communicator(store_t *store, communicator_ref_t communicator);
 
-bool add_toot(store_t *store, unsigned int device_id, unsigned int *toot_id,
+bool add_toot(store_t *store, uint32_t device_id, uint32_t *toot_id,
               crmna_err_t *err);
-void remove_toot(store_t *store, unsigned int toot_id);
-bool wait_toot_ready_or_failer(store_t *store, unsigned int toot_id,
+void remove_toot(store_t *store, uint32_t toot_id);
+bool wait_toot_ready_or_failer(store_t *store, uint32_t toot_id,
                                crmna_err_t *err);
-bool wait_toot_sent_or_failer(store_t *store, unsigned int toot_id,
+bool wait_toot_sent_or_failer(store_t *store, uint32_t toot_id,
                               crmna_err_t *err);
-void set_toot_failer(store_t *store, unsigned int toot_id);
-void set_toot_ready(store_t *store, unsigned int toot_id);
-void set_toot_sent(store_t *store, unsigned int toot_id);
-bool get_device_id_from_toot(store_t *store, unsigned int toot_id,
-                             unsigned int *device_id, crmna_err_t *err);
-bool get_device_pid_from_toot(store_t *store, unsigned int toot_id, int *pid,
+void set_toot_failer(store_t *store, uint32_t toot_id);
+void set_toot_ready(store_t *store, uint32_t toot_id);
+void set_toot_sent(store_t *store, uint32_t toot_id);
+bool get_device_id_from_toot(store_t *store, uint32_t toot_id,
+                             uint32_t *device_id, crmna_err_t *err);
+bool get_device_pid_from_toot(store_t *store, uint32_t toot_id, int *pid,
                               crmna_err_t *err);
 
-bool add_element(store_t *store, unsigned int toot_id, unsigned int *element_id,
+bool add_element(store_t *store, uint32_t toot_id, uint32_t *element_id,
                  crmna_err_t *err);
-void remove_element(store_t *store, unsigned int element_id);
-bool wait_element_sent_or_failer(store_t *store, unsigned int element_id,
+void remove_element(store_t *store, uint32_t element_id);
+bool wait_element_sent_or_failer(store_t *store, uint32_t element_id,
                                  crmna_err_t *err);
-void set_element_sent(store_t *store, unsigned int element_id);
-void set_element_failer(store_t *store, unsigned int element_id);
+void set_element_sent(store_t *store, uint32_t element_id);
+void set_element_failer(store_t *store, uint32_t element_id);
 #endif

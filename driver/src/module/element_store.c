@@ -1,9 +1,8 @@
-#include "store_internal.h"
 #include "module.h"
+#include "store_internal.h"
 
-element_store_t *get_element_when_ready(store_t *store,
-                                               unsigned int element_id,
-                                               crmna_err_t *err) {
+element_store_t *get_element_when_ready(store_t *store, uint32_t element_id,
+                                        crmna_err_t *err) {
   element_store_t *element =
       (element_store_t *)idr_find(&store->elements, element_id);
   if (element == NULL) {
@@ -18,7 +17,7 @@ element_store_t *get_element_when_ready(store_t *store,
     ADD_ERROR(err, "element is not ready");
     return NULL;
   }
-  unsigned int toot_id = element->toot_id;
+  uint32_t toot_id = element->toot_id;
   spin_unlock(&element->spinlock);
 
   if (!check_toot_ready(store, toot_id, err)) {
@@ -27,7 +26,7 @@ element_store_t *get_element_when_ready(store_t *store,
   return element;
 }
 
-bool add_element(store_t *store, unsigned int toot_id, unsigned int *element_id,
+bool add_element(store_t *store, uint32_t toot_id, uint32_t *element_id,
                  crmna_err_t *err) {
   if (!check_toot_ready(store, toot_id, err)) {
     return false;
@@ -35,20 +34,25 @@ bool add_element(store_t *store, unsigned int toot_id, unsigned int *element_id,
 
   idr_preload(GFP_KERNEL);
   spin_lock(&store->elements_lock);
+  uint32_t id = 0;
   int allocate_result =
-      idr_alloc(&store->elements, NULL, 0, INT_MAX, GFP_KERNEL);
+      idr_alloc_u32(&store->elements, NULL, &id, INT_MAX, GFP_KERNEL);
   spin_unlock(&store->elements_lock);
   idr_preload_end();
-  if (allocate_result == -ENOMEM) {
+  switch (allocate_result) {
+  case 0:
+    break;
+  case -ENOMEM:
     ADD_ERROR(err, "canot allocate toot. because no memory");
     return false;
-  }
-  if (allocate_result == -ENOSPC) {
+  case -ENOSPC:
     ADD_ERROR(err, "canot allocate toot. because no id space");
+    return false;
+  default:
+    ADD_ERROR(err, "canot allocate toot. because something worng");
     return false;
   }
 
-  unsigned int id = (unsigned int)allocate_result;
   element_store_t *element = kmalloc(sizeof(element_store_t), GFP_KERNEL);
   if (element == NULL) {
     spin_lock(&store->elements_lock);
@@ -67,7 +71,7 @@ bool add_element(store_t *store, unsigned int toot_id, unsigned int *element_id,
   return true;
 }
 
-void remove_element(store_t *store, unsigned int element_id) {
+void remove_element(store_t *store, uint32_t element_id) {
   element_store_t *element =
       (element_store_t *)idr_find(&store->elements, element_id);
   if (element == NULL) {
@@ -81,7 +85,7 @@ void remove_element(store_t *store, unsigned int element_id) {
 
   kfree(element);
 }
-bool wait_element_sent_or_failer(store_t *store, unsigned int element_id,
+bool wait_element_sent_or_failer(store_t *store, uint32_t element_id,
                                  crmna_err_t *err) {
   element_store_t *element = get_element_when_ready(store, element_id, err);
   if (element == NULL) {
@@ -94,12 +98,12 @@ bool wait_element_sent_or_failer(store_t *store, unsigned int element_id,
                                    10 * HZ / 1000);
   return true;
 }
-void set_element_sent(store_t *store, unsigned int element_id) {
+void set_element_sent(store_t *store, uint32_t element_id) {
   DEFINE_ERROR(err);
   element_store_t *element = get_element_when_ready(store, element_id, &err);
   if (element == NULL) {
-      printk_err(&err);
-      return;
+    printk_err(&err);
+    return;
   }
 
   spin_lock(&element->spinlock);
@@ -108,7 +112,7 @@ void set_element_sent(store_t *store, unsigned int element_id) {
 
   wake_up_interruptible(&element->wait_head);
 }
-void set_element_failer(store_t *store, unsigned int element_id) {
+void set_element_failer(store_t *store, uint32_t element_id) {
   DEFINE_ERROR(err);
   element_store_t *element = get_element_when_ready(store, element_id, &err);
   if (element == NULL) {

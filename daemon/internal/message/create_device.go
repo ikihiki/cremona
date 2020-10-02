@@ -9,7 +9,7 @@ import (
 
 type CreateDevice struct {
 	Name string
-	Uid uint32
+	Uid  uint32
 }
 
 func (this *CreateDevice) GetMessageTypeId() uint16 {
@@ -36,7 +36,7 @@ func (message *CreateDevice) Serialize() []byte {
 }
 
 type CreateDeviceResult struct {
-	Id uint64
+	Id uint32
 }
 
 func DeserializeCreateAccountResult(data []byte) (*CreateDeviceResult, error) {

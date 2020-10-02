@@ -1,9 +1,9 @@
 #include "module.h"
 #include "store_internal.h"
 
-bool set_toot_id(unsigned int toot_id, void *set_toot_id_context,
+bool set_toot_id(uint32_t toot_id, void *set_toot_id_context,
                  crmna_err_t *err) {
-  unsigned int *data = kmalloc(sizeof(unsigned int), GFP_KERNEL);
+  uint32_t *data = kmalloc(sizeof(uint32_t), GFP_KERNEL);
   if (data == NULL) {
     ADD_ERROR(err, "cannot allocate data");
     return false;
@@ -33,7 +33,7 @@ static int toot_close(struct inode *inode, struct file *file) {
   if (file->private_data == NULL) {
     return -EFAULT;
   }
-  unsigned int toot_id = *(unsigned int *)file->private_data;
+  uint32_t toot_id = *(uint32_t *)file->private_data;
   device_store_t *device = container_of(inode->i_cdev, device_store_t, cdev);
   action_t action = create_action_send_toot(toot_id);
   if (!dispatch(device->store, &action, &err)) {
@@ -51,7 +51,7 @@ static ssize_t toot_write(struct file *file, const char __user *buf,
   if (file->private_data == NULL) {
     return -EFAULT;
   }
-  unsigned int toot_id = *(unsigned int *)file->private_data;
+  uint32_t toot_id = *(uint32_t *)file->private_data;
   device_store_t *device =
       container_of(file->f_inode->i_cdev, device_store_t, cdev);
 
@@ -87,20 +87,23 @@ bool add_device(store_t *store, int pid, int uid, char *name, int *id,
 
   idr_preload(GFP_KERNEL);
   spin_lock(&store->devices_lock);
-  int allocate_result = idr_alloc(&store->devices, NULL, store->miner_min,
-                                  store->miner_max, GFP_KERNEL);
+  uint32_t device_id = store->miner_min;
+  int allocate_result = idr_alloc_u32(&store->devices, NULL, &device_id,
+                                      store->miner_max, GFP_KERNEL);
   spin_unlock(&store->devices_lock);
   idr_preload_end();
-  if (allocate_result == -ENOMEM) {
-    kfree(memorize_name);
-    return false;
-  }
-  if (allocate_result == -ENOSPC) {
+  switch (allocate_result)
+  {
+  case 0:
+    break;
+  case -ENOMEM:
+  case -ENOSPC:
+  default:
     kfree(memorize_name);
     return false;
   }
 
-  unsigned int device_id = (unsigned int)allocate_result;
+
 
   device_store_t *device = kmalloc(sizeof(device_store_t), GFP_KERNEL);
   if (device == NULL) {
@@ -124,7 +127,7 @@ bool add_device(store_t *store, int pid, int uid, char *name, int *id,
   return true;
 }
 
-void remove_device(store_t *store, unsigned int device_id) {
+void remove_device(store_t *store, uint32_t device_id) {
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
   if (device == NULL) {
@@ -149,8 +152,7 @@ void remove_device(store_t *store, unsigned int device_id) {
   kfree(device);
 }
 
-bool attach_device_class(store_t *store, unsigned int device_id,
-                         crmna_err_t *err) {
+bool attach_device_class(store_t *store, uint32_t device_id, crmna_err_t *err) {
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
   if (device == NULL) {
@@ -169,7 +171,7 @@ bool attach_device_class(store_t *store, unsigned int device_id,
   return true;
 }
 
-void detach_device_class(store_t *store, unsigned int device_id) {
+void detach_device_class(store_t *store, uint32_t device_id) {
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
   if (device == NULL) {
@@ -180,7 +182,7 @@ void detach_device_class(store_t *store, unsigned int device_id) {
   up_write(&device->semaphore);
 }
 
-void set_device_ready(store_t *store, unsigned int device_id) {
+void set_device_ready(store_t *store, uint32_t device_id) {
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
   if (device == NULL) {
@@ -191,8 +193,7 @@ void set_device_ready(store_t *store, unsigned int device_id) {
   up_write(&device->semaphore);
 }
 
-bool check_device_ready(store_t *store, unsigned int device_id,
-                        crmna_err_t *err) {
+bool check_device_ready(store_t *store, uint32_t device_id, crmna_err_t *err) {
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
   if (device == NULL) {

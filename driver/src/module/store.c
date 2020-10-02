@@ -12,7 +12,7 @@ static int driver_uevent(struct device *dev, struct kobj_uevent_env *env) {
   return 0;
 }
 
-store_t *create_store(unsigned int miner_min, unsigned int miner_max,
+store_t *create_store(uint32_t miner_min, uint32_t miner_max,
                       const char *driver_name, const char *class_name) {
   store_t *store = kzalloc(sizeof(store_t), GFP_KERNEL);
 
@@ -51,7 +51,7 @@ store_t *create_store(unsigned int miner_min, unsigned int miner_max,
 void destroy_store(store_t *store) {
 
   device_store_t *device;
-  unsigned int device_id;
+  uint32_t device_id;
   idr_for_each_entry(&store->devices, device, device_id) {
     remove_device(store, device_id);
   }
