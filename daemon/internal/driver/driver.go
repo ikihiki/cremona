@@ -3,7 +3,7 @@ package driver
 import (
 	"errors"
 
-	"github.com/ikihiki/cremona/daemon/internal/message"
+	"github.com/ikihiki/cremona/daemon/internal/driver/message"
 )
 
 

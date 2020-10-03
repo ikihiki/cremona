@@ -9,9 +9,9 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${fileDirname}",
+            "program": "${workspaceFolder}/cmd/daemon/main.go",
             "env": {},
-            "args": []
+            "args": ["-same_user"]
         }
     ]
 }

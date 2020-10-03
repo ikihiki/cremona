@@ -15,15 +15,17 @@ $(BUILD_DIR):
 
 all: clean build
 
-clean-daemon:
+.PHONY: clean
+clean:
 	go clean
 	rm -f $(DAEMON_TARGET)
 
-clean: clean-daemon
-
-build-daemon: $(DAEMON_TARGET)
-
-build: build-daemon
+.PHONY: build
+build: $(DAEMON_TARGET)
 
 watch:
 	reflex --decoration=none -r '\.go$$' make build
+
+.PHONY: run
+run: $(DAEMON_TARGET)
+	../build/daemon/cremona
