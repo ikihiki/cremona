@@ -11,15 +11,12 @@ func main() {
 	println()
 	agentMode := flag.Bool("agent", false, "is agent mode")
 	homeDir := flag.String("dir", "", "directory for .cremona")
+	sameUser := flag.Bool("same_user", false, "run agent same user as master")
+
 	flag.Parse()
 	if *agentMode {
-		agent, err := agent.NewAgent(*homeDir)
-		if err != nil {
-			panic(err)
-		}
-		agent.Run()
+		agent.StartAgent(*homeDir)
 	} else {
-		master := master.NewMaster()
-		master.Run()
+		master.StartMaster(*sameUser)
 	}
 }

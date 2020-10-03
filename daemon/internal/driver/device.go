@@ -6,7 +6,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/ikihiki/cremona/daemon/internal/message"
+	"github.com/ikihiki/cremona/daemon/internal/driver/message"
 	"github.com/ikihiki/cremona/daemon/internal/toot"
 	"golang.org/x/sys/unix"
 )

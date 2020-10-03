@@ -7,31 +7,35 @@ import (
 	"strings"
 )
 
-type UserId int
-
-type User struct {
+type user struct {
 	HomeDirectory string
 	Username      string
-	UserId        UserId
+	UserID        uint32
+	GroupID       uint32
 }
 
-func searchHomeDir() []User {
+func searchHomeDir() []user {
 	fp, err := os.Open("/etc/passwd")
 	if err != nil {
 		panic(err)
 	}
 
-	var result []User
+	var result []user
 	scanner := bufio.NewScanner(fp)
 	for scanner.Scan() {
 		fields := strings.Split(scanner.Text(), ":")
-		userId, err := strconv.Atoi(fields[2])
+		userID, err := strconv.ParseUint(fields[2], 10, 32)
 		if err != nil {
 			continue
 		}
-		user := User{
+		groupID, err := strconv.ParseUint(fields[3], 10, 32)
+		if err != nil {
+			continue
+		}
+		user := user{
 			HomeDirectory: fields[5],
-			UserId:        UserId(userId),
+			UserID:        uint32(userID),
+			GroupID:       uint32(groupID),
 			Username:      fields[0],
 		}
 
