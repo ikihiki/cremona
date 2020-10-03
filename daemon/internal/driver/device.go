@@ -17,7 +17,7 @@ type Configrator interface {
 }
 
 type Device struct {
-	Id         uint64
+	Id         uint32
 	config     Configrator
 	connection *Connection
 	tootManage toot.TootManager
@@ -116,10 +116,10 @@ func (device *Device) processAddText(recive *RecivedMessage) error {
 	if err != nil {
 		return err
 	}
-	len,err := device.tootManage.AddTootText(addTootText.TootId, addTootText.Text)
+	len, err := device.tootManage.AddTootText(addTootText.TootId, addTootText.Text)
 
 	if err != nil {
-				log.Println(err)
+		log.Println(err)
 
 		len = -1
 	}

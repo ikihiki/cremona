@@ -1,11 +1,11 @@
 obj-m += cremona.o
-cremona-objs := main.o driver_device_manager.o driver_device.o driver_toot.o mpack.o serializer.o device_manager.o device_map.o device.o util.o toot_map.o toot.o 
+cremona-objs := ../cremona/dispatch.o ../cremona/device.o ../cremona/toot.o ../cremona/communicator.o ../cremona/mpack.o ../cremona/serializer.o device_store.o toot_store.o element_store.o store.o net_link_comm.o main.o 
 
 ccflags-y := -DMPACK_HAS_CONFIG -std=gnu99 -Wno-declaration-after-statement
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
-BUILD_DIR ?= $(CURDIR)/../../build/driver/module
-TARGET ?= $(CURDIR)/../../build/driver/module/cremona.ko
+BUILD_DIR ?= $(CURDIR)/../../../build/driver/module
+TARGET ?= $(CURDIR)/../../../build/driver/module/cremona.ko
 
 $(TARGET): $(BUILD_DIR)
 	make -C $(KDIR) M=$(BUILD_DIR) src=$(CURDIR) modules

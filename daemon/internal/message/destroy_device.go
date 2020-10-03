@@ -7,15 +7,15 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-type DestroyDevice struct{
-	Id uint64
+type DestroyDevice struct {
+	Id uint32
 }
 
 func (this *DestroyDevice) GetMessageTypeId() uint16 {
 	return unix.NLMSG_MIN_TYPE * 6
 }
 func (this *DestroyDevice) GetFlags() uint16 {
-		return unix.NLM_F_REQUEST
+	return unix.NLM_F_REQUEST
 }
 
 func (message *DestroyDevice) Len() int {
@@ -34,9 +34,8 @@ func (message *DestroyDevice) Serialize() []byte {
 	return buff.Bytes()
 }
 
-
 type DestroyDeviceResult struct {
-	Id uint64
+	Id uint32
 }
 
 func DeserializeDestroyDeviceResult(data []byte) (*DestroyDeviceResult, error) {

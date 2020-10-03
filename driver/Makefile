@@ -15,3 +15,6 @@ run-test:
 
 watch:
 	reflex --decoration=none -r '\.(c|cpp|h)$$' make build
+
+watch-test:
+	reflex --decoration=none -r '\.(c|cpp|h)$$' -- sh -c 'echo "build start"; make build-test; echo "Watches established"'

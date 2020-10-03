@@ -5,7 +5,7 @@ import (
 )
 
 type Toot struct {
-	Id uint64
+	Id   uint32
 	Text *strings.Builder
 }
 

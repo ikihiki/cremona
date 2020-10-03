@@ -8,7 +8,7 @@
             "name": "test debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/test/bin/driver_test",
+            "program": "${workspaceFolder}/../build/driver/test/bin/driver_test",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
