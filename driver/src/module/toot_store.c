@@ -25,6 +25,7 @@ toot_store_t *get_toot_when_ready(store_t *store, uint32_t toot_id,
   toot_store_t *toot = (toot_store_t *)idr_find(&store->toots, toot_id);
   if (toot == NULL) {
     ADD_ERROR(err, "canot find toot id.");
+    printk("%s", err->error_msg[err->curret_line - 1]);
     return NULL;
   }
 
@@ -33,12 +34,14 @@ toot_store_t *get_toot_when_ready(store_t *store, uint32_t toot_id,
         toot->state == CLOSE_RESULT_WAIT)) {
     spin_unlock(&toot->spinlock);
     ADD_ERROR(err, "toot is not ready");
+    printk("%s", err->error_msg[err->curret_line - 1]);
     return NULL;
   }
   uint32_t device_id = toot->device_id;
   spin_unlock(&toot->spinlock);
 
   if (!check_device_ready(store, device_id, err)) {
+    printk("%s", err->error_msg[err->curret_line - 1]);
     return NULL;
   }
   return toot;
@@ -118,6 +121,7 @@ void remove_toot(store_t *store, uint32_t toot_id) {
 }
 bool wait_toot_ready_or_failer(store_t *store, uint32_t toot_id,
                                crmna_err_t *err) {
+  printk("wait_toot_ready_or_failer");
   toot_store_t *toot = get_toot_when_ready(store, toot_id, err);
   if (toot == NULL) {
     return false;
@@ -128,8 +132,8 @@ bool wait_toot_ready_or_failer(store_t *store, uint32_t toot_id,
                                        toot->state == DESTROYED ||
                                        toot->state == TOOT_ERROR,
                                    10 * HZ / 1000);
-
-  return true;
+  printk("wait_toot_ready_or_failer %d", toot->state);
+  return toot->state == OPEND;
 }
 bool wait_toot_sent_or_failer(store_t *store, uint32_t toot_id,
                               crmna_err_t *err) {
@@ -142,7 +146,7 @@ bool wait_toot_sent_or_failer(store_t *store, uint32_t toot_id,
       toot->wait_head, toot->state == DESTROYED || toot->state == TOOT_ERROR,
       10 * HZ / 1000);
 
-  return true;
+  return toot->state == DESTROYED;
 }
 void set_toot_failer(store_t *store, uint32_t toot_id) {
   DEFINE_ERROR(err);
@@ -169,6 +173,7 @@ void set_toot_ready(store_t *store, uint32_t toot_id) {
   spin_lock(&toot->spinlock);
   toot->state = OPEND;
   spin_unlock(&toot->spinlock);
+  printk("set toot ready");
 
   wake_up_interruptible(&toot->wait_head);
 }
@@ -208,11 +213,5 @@ bool get_device_pid_from_toot(store_t *store, uint32_t toot_id, int *pid,
     return false;
   }
 
-  device_store_t *device =
-      (device_store_t *)idr_find(&store->devices, toot->device_id);
-  if (device == NULL) {
-    return false;
-  }
-  *pid = device->pid;
-  return true;
+  return get_device_pid(store, toot->device_id, pid, err);
 }

@@ -37,6 +37,7 @@ typedef struct {
   struct device device;
   struct rw_semaphore semaphore;
   bool is_ready;
+  bool is_device_attachd;
   store_t *store;
 } device_store_t;
 

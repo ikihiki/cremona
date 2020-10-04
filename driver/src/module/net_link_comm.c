@@ -35,23 +35,26 @@ static void recive_data(struct sk_buff *skb) {
 struct netlink_kernel_cfg cfg = {
     .input = &recive_data,
 };
-size_t send_message(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
-                    crmna_err_t *err) {
+bool send_message(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
+             crmna_err_t *err)
+{
   netlink_communicator_t *com = (netlink_communicator_t *)obj;
   struct nlmsghdr *nlh;
   struct sk_buff *skb_out;
 
   printk(KERN_INFO "Cremona: %s: send message to %d, as %d count %ld in %p\n ",
          __func__, pid, type, buf->used_size, buf->buf);
-  size_t netlink_size =
-      buf->used_size > NLMSG_DEFAULT_SIZE ? buf->used_size : NLMSG_DEFAULT_SIZE;
+  size_t netlink_size = buf->used_size;
   skb_out = nlmsg_new(netlink_size, GFP_KERNEL);
   nlh = nlmsg_put(skb_out, pid, 0, type, netlink_size, 0);
   NETLINK_CB(skb_out).dst_group = 0; /* not in mcast group */
 
   memcpy(nlmsg_data(nlh), buf->buf, buf->used_size);
-  nlmsg_unicast(com->nl_sock, skb_out, pid);
-  return 0;
+  if(nlmsg_unicast(com->nl_sock, skb_out, pid) < 0){
+    printk("cremona send error");
+    return false;
+  }
+  return true;
 }
 void free(void *obj) {
   netlink_communicator_t *com = (netlink_communicator_t *)obj;

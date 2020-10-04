@@ -10,6 +10,7 @@ bool set_toot_id(uint32_t toot_id, void *set_toot_id_context,
   }
   *data = toot_id;
   ((struct file *)set_toot_id_context)->private_data = data;
+  printk("set private data");
   return true;
 }
 
@@ -24,7 +25,6 @@ static int toot_open(struct inode *inode, struct file *file) {
     printk_err(&err);
     return -EFAULT;
   }
-
   return 0;
 }
 
@@ -56,7 +56,10 @@ static ssize_t toot_write(struct file *file, const char __user *buf,
       container_of(file->f_inode->i_cdev, device_store_t, cdev);
 
   DEFINE_CRMNA_BUF(stored_value, 100);
-  int cnt = count < 99 ? count : 99;
+  for (int i = 0; i < stored_value.buf_size; i++){
+    stored_value.buf[i] = 0;
+  }
+    int cnt = count < 99 ? count : 99;
   printk("myDevice_write\n");
   if (copy_from_user(stored_value_buffer_content, buf, cnt) != 0) {
     return -EFAULT;
@@ -92,8 +95,7 @@ bool add_device(store_t *store, int pid, int uid, char *name, int *id,
                                       store->miner_max, GFP_KERNEL);
   spin_unlock(&store->devices_lock);
   idr_preload_end();
-  switch (allocate_result)
-  {
+  switch (allocate_result) {
   case 0:
     break;
   case -ENOMEM:
@@ -102,8 +104,6 @@ bool add_device(store_t *store, int pid, int uid, char *name, int *id,
     kfree(memorize_name);
     return false;
   }
-
-
 
   device_store_t *device = kmalloc(sizeof(device_store_t), GFP_KERNEL);
   if (device == NULL) {
@@ -120,6 +120,7 @@ bool add_device(store_t *store, int pid, int uid, char *name, int *id,
   device->dev = MKDEV(store->device_major, device_id);
   init_rwsem(&device->semaphore);
   device->is_ready = false;
+  device->is_device_attachd = false;
   device->store = store;
   idr_replace(&store->devices, device, device_id);
   *id = device_id;
@@ -155,8 +156,10 @@ void remove_device(store_t *store, uint32_t device_id) {
 bool attach_device_class(store_t *store, uint32_t device_id, crmna_err_t *err) {
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
+  printk("attach_device_class %p", device);
   if (device == NULL) {
     ADD_ERROR(err, "canot find device id");
+
     return false;
   }
 
@@ -167,6 +170,12 @@ bool attach_device_class(store_t *store, uint32_t device_id, crmna_err_t *err) {
   kobject_set_name(&(device->device.kobj), "crmna_%s", device->name);
   cdev_init(&device->cdev, &ops);
   device->cdev.owner = THIS_MODULE;
+  int error = cdev_device_add(&device->cdev, &device->device);
+  if (error != 0) {
+    printk("failed device add");
+    return false;
+  }
+  device->is_device_attachd = true;
   up_write(&device->semaphore);
   return true;
 }
@@ -174,11 +183,16 @@ bool attach_device_class(store_t *store, uint32_t device_id, crmna_err_t *err) {
 void detach_device_class(store_t *store, uint32_t device_id) {
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
+  printk("detach_device_class %p", device);
   if (device == NULL) {
     return;
   }
+
   down_write(&device->semaphore);
-  cdev_device_del(&device->cdev, &device->device);
+  if (device->is_device_attachd) {
+    cdev_device_del(&device->cdev, &device->device);
+    device->is_device_attachd = false;
+  }
   up_write(&device->semaphore);
 }
 
@@ -210,4 +224,16 @@ bool check_device_ready(store_t *store, uint32_t device_id, crmna_err_t *err) {
   up_read(&device->semaphore);
 
   return result;
+}
+
+bool get_device_pid(store_t *store, uint32_t device_id, int *pid,
+                    crmna_err_t *err) {
+  *pid = -1;
+  device_store_t *device =
+      (device_store_t *)idr_find(&store->devices, device_id);
+  if (device == NULL) {
+    return false;
+  }
+  *pid = device->pid;
+  return true;
 }

@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/ikihiki/cremona/daemon/internal/driver"
 	"github.com/ikihiki/cremona/daemon/internal/toot"
+	"golang.org/x/sync/errgroup"
 )
 
 type Config struct {
@@ -25,6 +26,8 @@ func (this *Config) GetUserId() uint32 {
 type TootSend struct{}
 
 func (this *TootSend) SendToot(toot *toot.Toot) error {
+	fmt.Printf("SendToot %#v\n", toot)
+	fmt.Printf("SendToot %s\n", toot.GetText())
 	return nil
 }
 
@@ -51,7 +54,7 @@ func main() {
 		panic(err)
 	}
 
-	stats, _ := driver.GetDriverStats(connection)
+	stats, _ := driver.GetDeviceHealth(connection, device.Id)
 	fmt.Printf("%#v\n", stats)
 
 	file, err := os.Stat("/dev/crmna_test_device")
@@ -62,9 +65,10 @@ func main() {
 
 	fmt.Printf("%#v\n", device)
 
-	wg := &sync.WaitGroup{}
-	cancel := make(chan interface{})
-	go device.RunMessageLoop(cancel, wg)
+	ctx, cancel := context.WithCancel(context.Background())
+	eg, ctx := errgroup.WithContext(ctx)
+	go eg.Go(func() error {return device.RunMessageLoop(ctx)}) 
+
 
 	time.Sleep(time.Second)
 
@@ -84,8 +88,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	cancel <- true
-	close(cancel)
+	cancel()
+	err = eg.Wait()
+	if err != nil {
+		panic(err)
+	}
+
+	stats, _ = driver.GetDeviceHealth(connection, device.Id)
+	fmt.Printf("%#v\n", stats)
 
 	err = device.DestroyDevice()
 	if err != nil {

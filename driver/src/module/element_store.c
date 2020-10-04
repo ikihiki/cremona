@@ -73,13 +73,13 @@ bool add_element(store_t *store, uint32_t toot_id, uint32_t *element_id, uint32_
   }
 
   spin_lock(&toot->spinlock);
-  *index = toot->element_count = toot->element_count + 1
+  *index = toot->element_count = toot->element_count + 1;
   spin_unlock(&toot->spinlock);
 
   element->element_id = id;
   element->toot_id = toot_id;
   element->state = ELEMENT_READY;
-  element->index = index;
+  element->index = *index;
   init_waitqueue_head(&element->wait_head);
   spin_lock_init(&element->spinlock);
   *element_id = id;

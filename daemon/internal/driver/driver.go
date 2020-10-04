@@ -6,25 +6,28 @@ import (
 	"github.com/ikihiki/cremona/daemon/internal/driver/message"
 )
 
-
-func GetDriverStats(connection *Connection) (*message.GetStatsResult, error) {
+func GetDeviceHealth(connection *Connection, deviceID uint32) (bool, error) {
 	if !connection.GetIsConnected() {
-		return nil, errors.New("not connected")
+		return false, errors.New("not connected")
 	}
 
-	err := connection.SendMessage(&message.GetStats{})
+	err := connection.SendMessage(&message.GetHealth{DeviceID: deviceID})
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
 	result, err := connection.ReciveMessage()
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	if result.Type != (&message.GetStatsResult{}).GetMessageTypeId() {
-		return nil, errors.New("invslid message")
+	if result.Type != (&message.GetHealthResult{}).GetMessageTypeId() {
+		return false, errors.New("invslid message")
 	}
 
-	return message.DeserializeGetStatsResult(result.Data)
+	m, err := message.DeserializeGetHealthResult(result.Data)
+	if err != nil {
+		return false, err
+	}
+	return m.Status, nil
 }

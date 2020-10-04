@@ -14,14 +14,18 @@
 
 #define INVALID_MESSAGE_TYPE_ID -1
 
-#define CRMNA_GET_STATS (NLMSG_MIN_TYPE * 2)
-#define CRMNA_GET_STATS_RESULT (NLMSG_MIN_TYPE * 3)
-typedef struct get_stats_result {
-  int total_device_count;
-  int total_open_toot;
-} get_stats_result_t;
-bool serialize_get_stats_result(const get_stats_result_t *data,
-                                crmna_buf_t *dest);
+#define CRMNA_GET_HEALTH (NLMSG_MIN_TYPE * 2)
+#define CRMNA_GET_HEALTH_RESULT (NLMSG_MIN_TYPE * 3)
+typedef struct get_health {
+  uint32_t device_id;
+} get_health_t;
+typedef struct get_health_result {
+  uint32_t device_id;
+  bool status;
+} get_health_result_t;
+bool serialize_get_health_result(const get_health_result_t *data,
+                                 crmna_buf_t *dest);
+bool deserialize_get_health(const crmna_buf_t *data, get_health_t *result);
 
 #define CRMNA_CREATE_DEVICE (NLMSG_MIN_TYPE * 4)
 #define CRMNA_CREATE_DEVICE_RESULT (NLMSG_MIN_TYPE * 5)
@@ -90,7 +94,7 @@ typedef struct add_toot_element_result {
 
 bool serialize_add_toot_element(const add_toot_text_t *data, crmna_buf_t *dest);
 bool deserialize_add_toot_element_result(const crmna_buf_t *data,
-                                      add_toot_text_result_t *result);
+                                         add_toot_text_result_t *result);
 
 #define CRMNA_SEND_TOOT (NLMSG_MIN_TYPE * 12)
 #define CRMNA_SEND_TOOT_RESULT (NLMSG_MIN_TYPE * 13)

@@ -1,6 +1,6 @@
 #include "../cremona/central_store.h"
-#include "module.h"
 #include "net_link_comm.h"
+#include "module.h"
 #include <linux/module.h>
 #include <linux/netlink.h>
 char *crmna_prefix;
@@ -14,9 +14,9 @@ store_t *store;
 communicator_ref_t com;
 
 static int cremona_init(void) {
-  printk("Hello my module\n");
+  printk("Hello ceremona module\n");
 
-  store = create_store(MINOR_BASE, MINOR_NUM, DRIVER_NAME);
+  store = create_store(MINOR_BASE, MINOR_NUM, DRIVER_NAME, "cremona");
   if (store == NULL) {
     return -EFAULT;
   }
@@ -30,7 +30,7 @@ static int cremona_init(void) {
 static void cremona_exit(void) {
   destroy_store(store);
   communicator_free(&com);
-  printk("Bye bye my module\n");
+  printk("Bye bye cremona module\n");
 }
 
 module_param(crmna_prefix, charp, 0);

@@ -11,6 +11,7 @@ require (
 	github.com/vishvananda/netlink v1.1.0
 	github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
 	golang.org/x/tools v0.0.0-20201002184944-ecd9fd270d5d
 	gopkg.in/yaml.v2 v2.3.0

@@ -53,6 +53,7 @@ void destroy_store(store_t *store) {
   device_store_t *device;
   uint32_t device_id;
   idr_for_each_entry(&store->devices, device, device_id) {
+    detach_device_class(store, device_id);
     remove_device(store, device_id);
   }
   idr_destroy(&store->devices);
