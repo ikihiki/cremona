@@ -28,13 +28,22 @@ bool create_toot(store_t *store, action_t *action, crmna_err_t *err) {
   }
 
   communicator_ref_t com = get_communicator(store);
-  if (communicator_send_message(&com, action->payload.create_device.pid,
-                                CRMNA_NEW_TOOT, &buf, err) != buf.buf_size) {
+  int pid;
+  if (!get_device_pid_from_toot(store, toot_id, &pid, err)) {
+    remove_toot(store, toot_id);
+    return false;
+  }
+  if (!communicator_send_message(&com, pid, CRMNA_NEW_TOOT, &buf, err)) {
     remove_toot(store, toot_id);
     return false;
   }
 
   if (!wait_toot_ready_or_failer(store, toot_id, err)) {
+    remove_toot(store, toot_id);
+    return false;
+  }
+  if (!action->payload.create_toot.set_toot_id(
+          toot_id, action->payload.create_toot.set_toot_id_context, err)) {
     remove_toot(store, toot_id);
     return false;
   }
@@ -58,26 +67,36 @@ bool create_action_from_create_toot_result_message(int pid,
 bool create_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
   uint32_t device_id;
 
-  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
+  if (!get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
                               &device_id, err)) {
+    ADD_ERROR(err, "Cannot convert toot id to device id. toot id: %d",
+              action->payload.create_toot_result.toot_id)
     return false;
   }
   int pid;
-  if (get_device_pid_from_toot(
+  if (!get_device_pid_from_toot(
           store, action->payload.create_toot_result.toot_id, &pid, err)) {
+    ADD_ERROR(err, "cannot get pid")
     return false;
   }
-  if (pid == action->payload.create_toot_result.pid &&
+  if (pid != action->payload.create_toot_result.pid ||
       device_id != action->payload.create_toot_result.device_id) {
+    ADD_ERROR(err,
+              "not same pid and device id. req pid: %d, req devid: %d, store "
+              "pid: %d, store devid: %d",
+              pid, device_id, action->payload.create_toot_result.pid,
+              action->payload.create_toot_result.device_id)
     return false;
   }
   if (action->payload.create_toot_result.result != 0) {
+    ADD_ERROR(err, "result is not null: %d",
+              action->payload.create_toot_result.result)
     set_toot_failer(store, action->payload.create_toot_result.toot_id);
+    return false;
   } else {
     set_toot_ready(store, action->payload.create_toot_result.toot_id);
+    return true;
   }
-
-  return true;
 }
 
 action_t create_action_add_toot_element(uint32_t toot_id, crmna_buf_t *txet) {
@@ -90,14 +109,17 @@ action_t create_action_add_toot_element(uint32_t toot_id, crmna_buf_t *txet) {
 bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err) {
   uint32_t element_id;
   uint32_t index;
-  if (!add_element(store, action->payload.add_toot_element.toot_id, &element_id,&index,
-                   err))
-  {
+  if (!add_element(store, action->payload.add_toot_element.toot_id, &element_id,
+                   &index, err)) {
+    ADD_ERROR(err, "cannot add element. toot id: %d",
+              action->payload.add_toot_element.toot_id)
     return false;
   }
   uint32_t device_id;
-  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
-                              &device_id, err)) {
+  if (!get_device_id_from_toot(store, action->payload.add_toot_element.toot_id,
+                               &device_id, err)) {
+    ADD_ERROR(err, "cannot get device id. toot id: %d",
+              action->payload.add_toot_element.toot_id)
     return false;
   }
 
@@ -108,20 +130,34 @@ bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err) {
   msg.index = index;
   msg.text = action->payload.add_toot_element.text->buf;
 
-  DEFINE_CRMNA_BUF(buf, 10)
+  DEFINE_CRMNA_BUF(buf, 200)
   if (!serialize_add_toot_element(&msg, &buf)) {
+    ADD_ERROR(err, "cannot get serialize message.")
     remove_element(store, element_id);
     return false;
   }
 
   communicator_ref_t com = get_communicator(store);
-  if (communicator_send_message(&com, action->payload.create_device.pid,
-                                CRMNA_NEW_TOOT, &buf, err) != buf.buf_size) {
+  int pid;
+  if (!get_device_pid_from_toot(store, action->payload.add_toot_element.toot_id,
+                                &pid, err)) {
+    ADD_ERROR(err, "cannot get pid. toot id: %d element id: %d",
+              action->payload.add_toot_element.toot_id, element_id)
+
+    remove_element(store, element_id);
+    return false;
+  }
+
+  if (!communicator_send_message(&com, pid, CRMNA_ADD_TOOT_TEXT, &buf, err)) {
+    ADD_ERROR(err, "cannot send message. toot id: %d element id: %d",
+              action->payload.add_toot_element.toot_id, element_id)
     remove_element(store, element_id);
     return false;
   }
 
   if (!wait_element_sent_or_failer(store, element_id, err)) {
+    ADD_ERROR(err, "fail add element. toot id: %d element id: %d",
+              action->payload.add_toot_element.toot_id, element_id)
     remove_element(store, element_id);
     return false;
   }
@@ -146,23 +182,34 @@ bool create_action_from_add_toot_element_result_message(int pid,
 bool add_toot_element_result(store_t *store, action_t *action,
                              crmna_err_t *err) {
   uint32_t device_id;
-  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
+  if (!get_device_id_from_toot(store, action->payload.add_toot_element_result.toot_id,
                               &device_id, err)) {
+    ADD_ERROR(err, "Cannot convert toot id to device id. toot id: %d",
+              action->payload.add_toot_element_result.toot_id)
     return false;
   }
   int pid;
-  if (get_device_pid_from_toot(
-          store, action->payload.create_toot_result.toot_id, &pid, err)) {
+  if (!get_device_pid_from_toot(
+          store, action->payload.add_toot_element_result.toot_id, &pid, err)) {
+    ADD_ERROR(err, "Cannot convert toot id to pid. toot id: %d",
+              action->payload.add_toot_element_result.toot_id)
+
     return false;
   }
   if (pid == action->payload.add_toot_element_result.pid &&
       device_id != action->payload.add_toot_element_result.device_id) {
+    ADD_ERROR(err,
+              "not same pid and device id. req pid: %d, req devid: %d, store "
+              "pid: %d, store devid: %d",
+              pid, device_id, action->payload.add_toot_element_result.pid,
+              action->payload.add_toot_element_result.device_id)
     return false;
   }
-  if (action->payload.add_toot_element_result.result != 0) {
-    set_element_sent(store, action->payload.add_toot_element_result.element_id);
+  if (action->payload.add_toot_element_result.result < 0) {
+    set_element_failer(store, action->payload.add_toot_element_result.element_id);
+    ADD_ERROR(err, "result is not null")
   } else {
-    set_element_failer(store,
+    set_element_sent(store,
                        action->payload.add_toot_element_result.element_id);
   }
 
@@ -177,13 +224,13 @@ action_t create_action_send_toot(uint32_t toot_id) {
 }
 bool send_toot(store_t *store, action_t *action, crmna_err_t *err) {
   uint32_t device_id;
-  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
+  if (!get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
                               &device_id, err)) {
     return false;
   }
   send_toot_t msg;
   msg.device_id = device_id;
-  msg.toot_id = action->payload.add_toot_element.toot_id;
+  msg.toot_id = action->payload.send_toot.toot_id;
 
   DEFINE_CRMNA_BUF(buf, 10)
   if (!serialize_send_toot(&msg, &buf)) {
@@ -192,8 +239,14 @@ bool send_toot(store_t *store, action_t *action, crmna_err_t *err) {
   }
 
   communicator_ref_t com = get_communicator(store);
-  if (communicator_send_message(&com, action->payload.create_device.pid,
-                                CRMNA_NEW_TOOT, &buf, err) != buf.buf_size) {
+  int pid;
+  if (!get_device_pid_from_toot(store, action->payload.send_toot.toot_id, &pid,
+                                err)) {
+    remove_toot(store, action->payload.send_toot.toot_id);
+    return false;
+  }
+
+  if (!communicator_send_message(&com, pid, CRMNA_SEND_TOOT, &buf, err)) {
     remove_toot(store, action->payload.send_toot.toot_id);
     return false;
   }
@@ -223,13 +276,13 @@ bool create_action_from_send_toot_result_message(int pid, crmna_buf_t *message,
 }
 bool send_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
   uint32_t device_id;
-  if (get_device_id_from_toot(store, action->payload.create_toot_result.toot_id,
-                              &device_id, err)) {
+  if (!get_device_id_from_toot(store, action->payload.send_toot_result.toot_id,
+                               &device_id, err)) {
     return false;
   }
   int pid;
-  if (get_device_pid_from_toot(
-          store, action->payload.create_toot_result.toot_id, &pid, err)) {
+  if (!get_device_pid_from_toot(store, action->payload.send_toot_result.toot_id,
+                                &pid, err)) {
     return false;
   }
   if (pid == action->payload.send_toot_result.pid &&
@@ -237,9 +290,9 @@ bool send_toot_result(store_t *store, action_t *action, crmna_err_t *err) {
     return false;
   }
   if (action->payload.send_toot_result.result != 0) {
-    set_toot_sent(store, action->payload.send_toot_result.toot_id);
-  } else {
     set_toot_failer(store, action->payload.send_toot_result.toot_id);
+  } else {
+    set_toot_sent(store, action->payload.send_toot_result.toot_id);
   }
 
   return true;

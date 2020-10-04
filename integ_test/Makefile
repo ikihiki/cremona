@@ -1,6 +1,6 @@
 ROOT := $(realpath $(dir $(realpath $(firstword $(MAKEFILE_LIST))))../)
 OUTDIR := $(ROOT)/build
-DRIVER := $(OUTDIR)/driver/cremona.ko
+DRIVER := $(OUTDIR)/driver/cremonamod.ko
 DRIVER_SRC := $(wildcard $(ROOT)/driver/src/*.c) $(wildcard $(ROOT)/driver/src/*.h)
 DAEMON := $(OUTDIR)/daemon/daemon
 DAEMON_SRC_ROOT := $(ROOT)/daemon
@@ -26,9 +26,6 @@ $(DRIVER): $(DRIVER_SRC)
 $(DAEMON): $(DAEMON_INTERNAL_SRC) $(DAEMON_SRC)
 	cd ../daemon/cmd/daemon; \
 	go build -o $(DAEMON)
-$(GET_STATS) : $(DAEMON_INTERNAL_SRC) $(GET_STATUS_SRC)
-	cd ../daemon/tools/get-stats; \
-	go build -o $(GET_STATS)
 
 $(DEVICE_OP) : $(DAEMON_INTERNAL_SRC) $(DEVICE_OP_SRC)
 	cd ../daemon/tools/device-op; \
@@ -44,18 +41,13 @@ $(SEND_TXT) : $(DAEMON_INTERNAL_SRC) $(SEND_TXT_SRC)
 	go build -o $(SEND_TXT)
 
 
-build: $(DRIVER) $(GET_STATS) $(DEVICE_OP) $(TOOT_OC) $(SEND_TXT);
+build: $(DRIVER) $(DEVICE_OP) $(TOOT_OC) $(SEND_TXT);
 
 load: $(DRIVER)
 	sudo insmod $(DRIVER)
 
 unload: 
 	sudo rmmod $(DRIVER)
-
-load-test: 
-	make load
-	$(GET_STATS) --wait 30
-	make unload
 
 device-test:
 	make load

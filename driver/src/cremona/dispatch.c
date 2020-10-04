@@ -20,7 +20,10 @@ bool dispatch(store_t *store, action_t *action, crmna_err_t *err) {
     return send_toot_result(store, action, err);
   case DESTROY_DEVICE:
     return destroy_device(store, action, err);
+  case GET_HEALTH:
+    return get_health(store, action, err);
   default:
+    ADD_ERROR(err, "Unknown action. type: %d", action->type)
     return false;
   }
 }
@@ -41,7 +44,10 @@ bool create_action_from_message(int type, int pid, crmna_buf_t *message,
   case CRMNA_SEND_TOOT_RESULT:
     return create_action_from_send_toot_result_message(pid, message, action,
                                                        err);
+  case CRMNA_GET_HEALTH:
+    return create_action_from_get_health_message(pid, message, action, err);
   default:
+    ADD_ERROR(err, "Unknown message type. type: %d", type)
     return false;
   }
 }

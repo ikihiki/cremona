@@ -1,10 +1,12 @@
 package driver
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/ikihiki/cremona/daemon/internal/driver/message"
 	"github.com/ikihiki/cremona/daemon/internal/toot"
@@ -21,6 +23,8 @@ type Device struct {
 	config     Configrator
 	connection *Connection
 	tootManage toot.TootManager
+	isNormal bool
+	mutex sync.Mutex
 }
 
 func NewDevice(connection *Connection, config Configrator, tootManage toot.TootManager) (*Device, error) {
@@ -52,8 +56,10 @@ func NewDevice(connection *Connection, config Configrator, tootManage toot.TootM
 		return nil, err
 	}
 
-	return &Device{connection: connection, config: config, Id: message.Id, tootManage: tootManage}, nil
+	return &Device{connection: connection, config: config, Id: message.Id, tootManage: tootManage, isNormal: true}, nil
 }
+
+
 
 func (device *Device) DestroyDevice() error {
 	if !device.connection.GetIsConnected() {
@@ -83,6 +89,25 @@ func (device *Device) DestroyDevice() error {
 	}
 	if message.Id != device.Id {
 		return errors.New("invalid device")
+	}
+	return nil
+}
+
+func (device *Device)  SendGetDeviceHealth() error {
+	device.mutex.Lock()
+	if device.isNormal == false{
+		device.mutex.Unlock()
+		return errors.New("device is not respond");
+	}
+	device.isNormal = false;
+	device.mutex.Unlock()
+	if !device.connection.GetIsConnected() {
+		return errors.New("not connected")
+	}
+
+	err := device.connection.SendMessage(&message.GetHealth{DeviceID: device.Id})
+	if err != nil {
+		return  err
 	}
 	return nil
 }
@@ -146,6 +171,22 @@ func (device *Device) processSendText(recive *RecivedMessage) error {
 	return err
 }
 
+func (device *Device) processHealth(recive *RecivedMessage) error {
+	m, err := message.DeserializeGetHealthResult(recive.Data)
+	if err != nil {
+		return err
+	}
+	device.mutex.Lock()
+	device.isNormal = m.Status;
+	if device.isNormal == false{
+		device.mutex.Unlock()
+		return errors.New("device is unexpected");
+	}
+	device.mutex.Unlock()
+	return nil
+}
+
+
 func (device *Device) processMessages(recive *RecivedMessage) error {
 
 	switch recive.Type {
@@ -160,7 +201,7 @@ func (device *Device) processMessages(recive *RecivedMessage) error {
 	}
 }
 
-func (device *Device) RunMessageLoop(cancel <-chan interface{}, wg *sync.WaitGroup) {
+func (device *Device) RunMessageLoop(c context.Context) error {
 	messageChannel := make(chan *RecivedMessage)
 	go func() {
 		for {
@@ -173,11 +214,19 @@ func (device *Device) RunMessageLoop(cancel <-chan interface{}, wg *sync.WaitGro
 	}()
 	for {
 		select {
-		case <-cancel:
-			wg.Done()
-			break
+		case <-c.Done():
+			return nil;
+		case <- time.Tick(time.Second * 10):
+			err := device.SendGetDeviceHealth()
+			if err != nil {
+				return err
+			}
+
 		case message := <-messageChannel:
-			device.processMessages(message)
+			err := device.processMessages(message)
+			if err != nil {
+				return err
+			}
 		}
 
 	}

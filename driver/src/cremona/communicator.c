@@ -1,6 +1,6 @@
 #include "commuinicator.h"
 
-size_t communicator_send_message(communicator_ref_t *ref, uint32_t pid,
+bool communicator_send_message(communicator_ref_t *ref, uint32_t pid,
                                  int type, crmna_buf_t *data,
                                  crmna_err_t *err) {
   if (ref == NULL) {

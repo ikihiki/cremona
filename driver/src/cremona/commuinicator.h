@@ -5,7 +5,7 @@
 #include "buffer.h"
 
 typedef struct {
-  size_t (*send_message)(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
+  bool (*send_message)(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
                          crmna_err_t *err);
   void (*free)(void *obj);
 } communicator_t;
@@ -23,9 +23,9 @@ typedef struct {
  * @param type 送信するデータタイプ
  * @param data 送信するデータ
  * @param err エラー
- * @return 送信に成功したバイト数。エラーの場合は-1。
+ * @return 送信に成功したかどうか
  */
-size_t communicator_send_message(communicator_ref_t *ref, uint32_t pid, int type,
+bool communicator_send_message(communicator_ref_t *ref, uint32_t pid, int type,
                               crmna_buf_t *data, crmna_err_t *err);
 
 /**

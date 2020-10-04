@@ -16,8 +16,19 @@ typedef enum action_type {
   ADD_TOOT_ELEMENT_RESULT,
   SEND_TOOT,
   SEND_TOOT_RESULT,
-  DESTROY_DEVICE
+  DESTROY_DEVICE,
+  GET_HEALTH
 } action_type_t;
+
+typedef struct get_health_payload {
+  uint32_t device_id;
+  int pid;
+} get_health_payload_t;
+bool create_action_from_get_health_message(int pid,
+                                                   crmna_buf_t *message,
+                                                   action_t *action,
+                                                   crmna_err_t *err);
+bool get_health(store_t *store, action_t *action, crmna_err_t *err);
 
 typedef struct create_device_payload {
   int pid;
@@ -112,6 +123,7 @@ typedef struct action {
     send_toot_payload_t send_toot;
     send_toot_result_payload_t send_toot_result;
     destroy_device_payload_t destroy_device;
+    get_health_payload_t get_health;
   } payload;
 } action_t;
 
@@ -123,7 +135,13 @@ bool add_device(store_t *store, int pid, int uid, char *name, int *id,
 void remove_device(store_t *store, uint32_t device_id);
 bool attach_device_class(store_t *store, uint32_t device_id, crmna_err_t *err);
 void detach_device_class(store_t *store, uint32_t device_id);
+bool check_device_ready(
+    store_t *store, uint32_t device_id,
+    crmna_err_t *err);
 void set_device_ready(store_t *store, uint32_t device_id);
+bool get_device_pid(store_t *store, uint32_t device_id, int *pid,
+                              crmna_err_t *err);
+
 communicator_ref_t get_communicator(store_t *store);
 void set_communicator(store_t *store, communicator_ref_t communicator);
 

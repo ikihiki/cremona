@@ -1,15 +1,16 @@
 package agent
 
 import (
+	"context"
 	"os"
 	"os/signal"
-	"sync"
 
 	"github.com/ikihiki/cremona/daemon/internal/config"
 	"github.com/ikihiki/cremona/daemon/internal/driver"
 	"github.com/ikihiki/cremona/daemon/internal/log"
 	"github.com/ikihiki/cremona/daemon/internal/mastdon"
 	"github.com/ikihiki/cremona/daemon/internal/toot"
+	"golang.org/x/sync/errgroup"
 )
 
 
@@ -41,20 +42,25 @@ func StartAgent(baseDir string) {
 		connection.DisConnect()
 		logger.Fatalf("cannot create device: %v\n", err)
 	}
-
-	wg := &sync.WaitGroup{}
-	cancel := make(chan interface{})
-    // シグナル用のチャネル定義
+	// シグナル用のチャネル定義
     quit := make(chan os.Signal)
 
     // 受け取るシグナルを設定
-    signal.Notify(quit, os.Interrupt)
-
-	go device.RunMessageLoop(cancel, wg)
+	signal.Notify(quit, os.Interrupt)
+	ctx, cancel := context.WithCancel(context.Background())
+	eg, ctx := errgroup.WithContext(ctx)
+	
+	go eg.Go(func() error {return device.RunMessageLoop(ctx)}) 
 
 	<-quit
-	cancel <- nil
-	wg.Wait()
+	cancel()
+	err = eg.Wait()	
+	if err != nil {
+		logger.Printf("error in run device : %v\n", err)
+	}
 	err = device.DestroyDevice()
+	if err != nil {
+		logger.Printf("error in destory device: %v\n", err)
+	}
 	connection.DisConnect()
 }

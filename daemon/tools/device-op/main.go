@@ -23,7 +23,7 @@ func (this *Config) GetUserId() uint32 {
 func main() {
 	port := flag.Int("port", 17, "port")
 	name := flag.String("name", "test_device", "name of divice")
-	wait := flag.Uint("wait", 120, "wait sec for destory device ")
+	wait := flag.Uint("wait", 10, "wait sec for destory device ")
 	flag.Parse()
 
 	config := &Config{name: *name}
@@ -39,7 +39,7 @@ func main() {
 		panic(err)
 	}
 
-	stats, _ := driver.GetDriverStats(connection)
+	stats, _ := driver.GetDeviceHealth(connection, device.Id)
 	fmt.Printf("%#v\n", stats)
 
 	file, err := os.Stat("/dev/crmna_test_device")
@@ -55,6 +55,9 @@ func main() {
 		if err != nil {
 		panic(err)
 	}
+
+	stats, _ = driver.GetDeviceHealth(connection, device.Id)
+	fmt.Printf("%#v\n", stats)
 
 	_, err = os.Stat("/dev/crmna_test_device")
 	fmt.Printf("%#v\n", err)
