@@ -112,18 +112,18 @@ func (device *Device) processNewtoot(recive *RecivedMessage) error {
 }
 
 func (device *Device) processAddText(recive *RecivedMessage) error {
-	addTootText, err := message.DeserializeAddTootText(recive.Data)
+	addTootText, err := message.DeserializeAddTootElement(recive.Data)
 	if err != nil {
 		return err
 	}
-	len, err := device.tootManage.AddTootText(addTootText.TootId, addTootText.Text)
+	len, err := device.tootManage.AddTootElement(addTootText.TootId, addTootText.Index, addTootText.Text)
 
 	if err != nil {
 		log.Println(err)
 
 		len = -1
 	}
-	result := &message.AddTootTextResult{TootId: addTootText.TootId, DeviceId: addTootText.DeviceId, Result: len}
+	result := &message.AddTootElementResult{TootId: addTootText.TootId, DeviceId: addTootText.DeviceId, ElementId: addTootText.ElementId, Result: len}
 	err = device.connection.SendMessage(result)
 	return err
 }
@@ -174,11 +174,11 @@ func (device *Device) RunMessageLoop(cancel <-chan interface{}, wg *sync.WaitGro
 	for {
 		select {
 		case <-cancel:
+			wg.Done()
 			break
 		case message := <-messageChannel:
 			device.processMessages(message)
 		}
 
 	}
-	wg.Done()
 }

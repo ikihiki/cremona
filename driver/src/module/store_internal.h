@@ -57,6 +57,7 @@ typedef struct {
   wait_queue_head_t wait_head;
   spinlock_t spinlock;
   toot_state_t state;
+  uint32_t element_count;
 } toot_store_t;
 
 bool check_toot_ready(store_t *store, uint32_t toot_id, crmna_err_t *err);
@@ -78,6 +79,7 @@ typedef struct {
   wait_queue_head_t wait_head;
   spinlock_t spinlock;
   element_state_t state;
+  uint32_t index;
 } element_store_t;
 element_store_t *get_element_when_ready(store_t *store, uint32_t element_id,
                                         crmna_err_t *err);

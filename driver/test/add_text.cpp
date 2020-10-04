@@ -148,7 +148,7 @@
 //                 (char *)new_toot_result_message,
 //                 sizeof(new_toot_result_message), &err);
 //   char *text = "sample_text";
-//   bool result = add_toot_text(toot, text, true, &err);
+//   bool result = add_toot_element(toot, text, true, &err);
 
 //   EXPECT_TRUE(result);
 //   EXPECT_EQ(ADD_TEXT_RESULT_WAIT, toot->state);

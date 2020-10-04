@@ -26,7 +26,7 @@ element_store_t *get_element_when_ready(store_t *store, uint32_t element_id,
   return element;
 }
 
-bool add_element(store_t *store, uint32_t toot_id, uint32_t *element_id,
+bool add_element(store_t *store, uint32_t toot_id, uint32_t *element_id, uint32_t *index,
                  crmna_err_t *err) {
   if (!check_toot_ready(store, toot_id, err)) {
     return false;
@@ -62,9 +62,24 @@ bool add_element(store_t *store, uint32_t toot_id, uint32_t *element_id,
     return false;
   }
 
+  toot_store_t *toot = (toot_store_t *)idr_find(&store->toots, toot_id);
+  if (toot == NULL) {
+    spin_lock(&store->elements_lock);
+    idr_remove(&store->elements, id);
+    spin_unlock(&store->elements_lock);
+    kfree(element);
+    ADD_ERROR(err, "canot find toot.");
+    return false;
+  }
+
+  spin_lock(&toot->spinlock);
+  *index = toot->element_count = toot->element_count + 1
+  spin_unlock(&toot->spinlock);
+
   element->element_id = id;
   element->toot_id = toot_id;
   element->state = ELEMENT_READY;
+  element->index = index;
   init_waitqueue_head(&element->wait_head);
   spin_lock_init(&element->spinlock);
   *element_id = id;

@@ -143,7 +143,7 @@ bool get_device_pid_from_toot(store_t *store, uint32_t toot_id, int *pid,
                               crmna_err_t *err);
 
 bool add_element(store_t *store, uint32_t toot_id, uint32_t *element_id,
-                 crmna_err_t *err);
+                 uint32_t *index, crmna_err_t *err);
 void remove_element(store_t *store, uint32_t element_id);
 bool wait_element_sent_or_failer(store_t *store, uint32_t element_id,
                                  crmna_err_t *err);

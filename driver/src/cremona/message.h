@@ -74,20 +74,22 @@ bool deserialize_new_toot_result(const crmna_buf_t *data,
 #define CRMNA_ADD_TOOT_TEXT (NLMSG_MIN_TYPE * 10)
 #define CRMNA_ADD_TOOT_TEXT_RESULT (NLMSG_MIN_TYPE * 11)
 
-typedef struct add_toot_text {
+typedef struct add_toot_element {
   uint32_t toot_id;
   uint32_t device_id;
   uint32_t element_id;
+  uint32_t index;
   char *text;
 } add_toot_text_t;
-typedef struct add_toot_text_result {
+typedef struct add_toot_element_result {
   uint32_t toot_id;
   uint32_t device_id;
+  uint32_t element_id;
   int result;
 } add_toot_text_result_t;
 
-bool serialize_add_toot_text(const add_toot_text_t *data, crmna_buf_t *dest);
-bool deserialize_add_toot_text_result(const crmna_buf_t *data,
+bool serialize_add_toot_element(const add_toot_text_t *data, crmna_buf_t *dest);
+bool deserialize_add_toot_element_result(const crmna_buf_t *data,
                                       add_toot_text_result_t *result);
 
 #define CRMNA_SEND_TOOT (NLMSG_MIN_TYPE * 12)
