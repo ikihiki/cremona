@@ -12,16 +12,18 @@ typedef struct {
 static int process_recive_data(struct sk_buff *skb, struct nlmsghdr *nlh,
                                struct netlink_ext_ack *ack) {
   DEFINE_ERROR(err);
-
   netlink_communicator_t *com = (netlink_communicator_t *)skb->sk->sk_user_data;
   action_t action;
   DEFINE_CRMNA_BUF_FROM_MEMORY(buf, (char *)nlmsg_data(nlh), nlh->nlmsg_len);
   if (!create_action_from_message(nlh->nlmsg_type, nlh->nlmsg_pid, &buf,
                                   &action, &err)) {
+    ADD_ERROR((&err), "recive message err create action");
     printk_err(&err);
     return 1;
   }
-  if (!dispatch(com->store, &action, &err)) {
+  if (!dispatch(com->store, &action, &err))
+  {
+    ADD_ERROR((&err), "recive message err dispatch");
     printk_err(&err);
     return 1;
   }
@@ -42,8 +44,8 @@ bool send_message(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
   struct nlmsghdr *nlh;
   struct sk_buff *skb_out;
 
-  printk(KERN_INFO "Cremona: %s: send message to %d, as %d count %ld in %p\n ",
-         __func__, pid, type, buf->used_size, buf->buf);
+  // printk(KERN_INFO "Cremona: %s: send message to %d, as %d count %ld in %p\n ",
+  //        __func__, pid, type, buf->used_size, buf->buf);
   size_t netlink_size = buf->used_size;
   skb_out = nlmsg_new(netlink_size, GFP_KERNEL);
   nlh = nlmsg_put(skb_out, pid, 0, type, netlink_size, 0);
@@ -51,7 +53,7 @@ bool send_message(void *obj, uint32_t pid, int type, crmna_buf_t *buf,
 
   memcpy(nlmsg_data(nlh), buf->buf, buf->used_size);
   if(nlmsg_unicast(com->nl_sock, skb_out, pid) < 0){
-    printk("cremona send error");
+    ADD_ERROR(err, "send message error");
     return false;
   }
   return true;

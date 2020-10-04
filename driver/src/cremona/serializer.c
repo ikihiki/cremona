@@ -135,7 +135,7 @@ bool serialize_add_toot_element(const add_toot_text_t *data,
                                 crmna_buf_t *dest) {
   mpack_writer_t writer;
   mpack_writer_init(&writer, dest->buf, dest->buf_size);
-  mpack_start_array(&writer, 3);
+  mpack_start_array(&writer, 5);
   mpack_write_u32(&writer, data->toot_id);
   mpack_write_u32(&writer, data->device_id);
   mpack_write_u32(&writer, data->element_id);

@@ -111,7 +111,7 @@ bool destroy_device(store_t *store, action_t *action, crmna_err_t *err) {
   }
 
   communicator_ref_t com = get_communicator(store);
-  if (!communicator_send_message(&com, action->payload.create_device.pid,
+  if (!communicator_send_message(&com, action->payload.destroy_device.pid,
                                 CRMNA_DESTROY_DEVICE_RESULT, &buf,
                                 err)) {
     detach_device_class(store, action->payload.destroy_device.device_id);

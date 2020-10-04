@@ -10,7 +10,6 @@ bool set_toot_id(uint32_t toot_id, void *set_toot_id_context,
   }
   *data = toot_id;
   ((struct file *)set_toot_id_context)->private_data = data;
-  printk("set private data");
   return true;
 }
 
@@ -22,13 +21,16 @@ static int toot_open(struct inode *inode, struct file *file) {
   action_t action =
       create_action_create_toot(device->device_id, &set_toot_id, file);
   if (!dispatch(device->store, &action, &err)) {
+    ADD_ERROR((&err), "toot open fail");
     printk_err(&err);
+    
     return -EFAULT;
   }
   return 0;
 }
 
 static int toot_close(struct inode *inode, struct file *file) {
+  
   DEFINE_ERROR(err);
   if (file->private_data == NULL) {
     return -EFAULT;
@@ -38,6 +40,7 @@ static int toot_close(struct inode *inode, struct file *file) {
   action_t action = create_action_send_toot(toot_id);
   if (!dispatch(device->store, &action, &err)) {
     kfree(file->private_data);
+    ADD_ERROR((&err), "toot close fail. toot id: %d", toot_id);
     printk_err(&err);
     return -EFAULT;
   }
@@ -60,13 +63,14 @@ static ssize_t toot_write(struct file *file, const char __user *buf,
     stored_value.buf[i] = 0;
   }
     int cnt = count < 99 ? count : 99;
-  printk("myDevice_write\n");
   if (copy_from_user(stored_value_buffer_content, buf, cnt) != 0) {
+    ADD_ERROR((&err), "fail copy data");
+    printk_err(&err);
     return -EFAULT;
   }
-  printk("%s\n", stored_value_buffer_content);
   action_t action = create_action_add_toot_element(toot_id, &stored_value);
   if (!dispatch(device->store, &action, &err)) {
+    ADD_ERROR((&err), "toot close fail. toot id: %d", toot_id);
     printk_err(&err);
     return -EFAULT;
   }
@@ -102,6 +106,7 @@ bool add_device(store_t *store, int pid, int uid, char *name, int *id,
   case -ENOSPC:
   default:
     kfree(memorize_name);
+    ADD_ERROR(err, "fail device id allocation");
     return false;
   }
 
@@ -111,6 +116,7 @@ bool add_device(store_t *store, int pid, int uid, char *name, int *id,
     spin_lock(&store->devices_lock);
     idr_remove(&store->devices, device_id);
     spin_unlock(&store->devices_lock);
+    ADD_ERROR(err, "fail device allocation");
     return false;
   }
   device->device_id = device_id;
@@ -156,10 +162,8 @@ void remove_device(store_t *store, uint32_t device_id) {
 bool attach_device_class(store_t *store, uint32_t device_id, crmna_err_t *err) {
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
-  printk("attach_device_class %p", device);
   if (device == NULL) {
     ADD_ERROR(err, "canot find device id");
-
     return false;
   }
 
@@ -172,7 +176,7 @@ bool attach_device_class(store_t *store, uint32_t device_id, crmna_err_t *err) {
   device->cdev.owner = THIS_MODULE;
   int error = cdev_device_add(&device->cdev, &device->device);
   if (error != 0) {
-    printk("failed device add");
+    ADD_ERROR(err, "fail device add");
     return false;
   }
   device->is_device_attachd = true;
@@ -183,7 +187,6 @@ bool attach_device_class(store_t *store, uint32_t device_id, crmna_err_t *err) {
 void detach_device_class(store_t *store, uint32_t device_id) {
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
-  printk("detach_device_class %p", device);
   if (device == NULL) {
     return;
   }
@@ -232,6 +235,7 @@ bool get_device_pid(store_t *store, uint32_t device_id, int *pid,
   device_store_t *device =
       (device_store_t *)idr_find(&store->devices, device_id);
   if (device == NULL) {
+    ADD_ERROR(err, "cannot found device %d", device_id);
     return false;
   }
   *pid = device->pid;

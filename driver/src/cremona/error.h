@@ -33,7 +33,7 @@ typedef struct {
       snprintf(crmna_err->error_msg[crmna_err->curret_line],                   \
                ERROR_MESSAGE_ENTRY_LENGTH, "%s: " fmt, __func__,               \
                ##__VA_ARGS__);                                                 \
-      crmna_err->curret_line++;                                                \
+      crmna_err->curret_line = crmna_err->curret_line + 1;                         \
     }                                                                          \
   }
 

@@ -68,7 +68,11 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	eg, ctx := errgroup.WithContext(ctx)
-	go eg.Go(func() error {return device.RunMessageLoop(ctx)}) 
+	go eg.Go(func() error {
+		err:= device.RunMessageLoop(ctx)
+		fmt.Printf("%#v\n", err)
+		return err
+		}) 
 
 	time.Sleep(time.Second)
 

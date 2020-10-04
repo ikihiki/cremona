@@ -3,7 +3,6 @@
 static void get_ownership(struct device *dev, kuid_t *uid, kgid_t *gid) {
   device_store_t *device_store = container_of(dev, device_store_t, device);
   uid->val = device_store->uid;
-  printk("Cremona: get ownership. uid %u\n", device_store->uid);
 }
 
 static int driver_uevent(struct device *dev, struct kobj_uevent_env *env) {
@@ -76,7 +75,8 @@ void printk_err(crmna_err_t *err) {
   if (err == NULL) {
     return;
   }
-  for (int i = 0; i < err->curret_line; err++) {
+  printk(KERN_ERR "CREMONA: Error count: %d", err->curret_line);
+  for (int i = 0; i < err->curret_line; i++) {
     printk(KERN_ERR "CREMONA: %s", err->error_msg[i]);
   }
 }
