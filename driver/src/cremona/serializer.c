@@ -120,12 +120,14 @@ bool deserialize_new_toot_result(const crmna_buf_t *data,
   return true;
 }
 
-bool serialize_add_toot_text(const add_toot_text_t *data, crmna_buf_t *dest) {
+bool serialize_add_toot_element(const add_toot_text_t *data, crmna_buf_t *dest) {
   mpack_writer_t writer;
   mpack_writer_init(&writer, dest->buf, dest->buf_size);
   mpack_start_array(&writer, 3);
   mpack_write_u32(&writer, data->toot_id);
   mpack_write_u32(&writer, data->device_id);
+  mpack_write_u32(&writer, data->element_id);
+  mpack_write_u32(&writer, data->index);
   mpack_write_utf8_cstr_or_nil(&writer, data->text);
   mpack_finish_array(&writer);
   if (mpack_writer_destroy(&writer) != mpack_ok) {
@@ -135,7 +137,7 @@ bool serialize_add_toot_text(const add_toot_text_t *data, crmna_buf_t *dest) {
   return true;
 }
 
-bool deserialize_add_toot_text_result(const crmna_buf_t *data,
+bool deserialize_add_toot_element_result(const crmna_buf_t *data,
                                       add_toot_text_result_t *result) {
   mpack_tree_t tree;
   mpack_node_data_t nodes[50];
@@ -146,7 +148,9 @@ bool deserialize_add_toot_text_result(const crmna_buf_t *data,
   result->toot_id = mpack_node_u32(toot_id);
   mpack_node_t device_id = mpack_node_array_at(root, 1);
   result->device_id = mpack_node_u32(device_id);
-  mpack_node_t result_num = mpack_node_array_at(root, 2);
+  mpack_node_t element_id = mpack_node_array_at(root, 2);
+  result->element_id = mpack_node_u32(element_id);
+  mpack_node_t result_num = mpack_node_array_at(root, 3);
   result->result = mpack_node_i32(result_num);
   if (mpack_tree_destroy(&tree) != mpack_ok) {
     return false;

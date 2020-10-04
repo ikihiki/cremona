@@ -89,8 +89,10 @@ action_t create_action_add_toot_element(uint32_t toot_id, crmna_buf_t *txet) {
 }
 bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err) {
   uint32_t element_id;
-  if (!add_element(store, action->payload.add_toot_element.toot_id, &element_id,
-                   err)) {
+  uint32_t index;
+  if (!add_element(store, action->payload.add_toot_element.toot_id, &element_id,&index,
+                   err))
+  {
     return false;
   }
   uint32_t device_id;
@@ -103,10 +105,11 @@ bool add_toot_element(store_t *store, action_t *action, crmna_err_t *err) {
   msg.device_id = device_id;
   msg.toot_id = action->payload.add_toot_element.toot_id;
   msg.element_id = element_id;
+  msg.index = index;
   msg.text = action->payload.add_toot_element.text->buf;
 
   DEFINE_CRMNA_BUF(buf, 10)
-  if (!serialize_add_toot_text(&msg, &buf)) {
+  if (!serialize_add_toot_element(&msg, &buf)) {
     remove_element(store, element_id);
     return false;
   }
@@ -130,7 +133,7 @@ bool create_action_from_add_toot_element_result_message(int pid,
                                                         action_t *action,
                                                         crmna_err_t *err) {
   add_toot_text_result_t payload;
-  if (!deserialize_add_toot_text_result(message, &payload)) {
+  if (!deserialize_add_toot_element_result(message, &payload)) {
     return false;
   }
   action->type = ADD_TOOT_ELEMENT_RESULT;
