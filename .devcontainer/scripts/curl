@@ -1,0 +1,16 @@
+#!/bin/sh
+PREREQS=""
+case $1 in
+        prereqs) echo "${PREREQS}"; exit 0;;
+esac
+. /usr/share/initramfs-tools/hook-functions
+copy_exec /usr/bin/curl /bin
+copy_exec /usr/sbin/dhclient /bin
+copy_file /etc/dhcp/dhclient.conf /etc/dhcp
+
+mkdir -p /tmp/certs
+cp -L  /etc/ssl/certs/* /tmp/certs/
+for i in $(ls -1 /tmp/certs); do
+    copy_file /tmp/certs/$i /etc/ssl/certs/$i
+done
+rm -r /tmp/certs
