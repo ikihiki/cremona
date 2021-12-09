@@ -1,0 +1,5 @@
+image:
+  file: .devcontainer/Dockerfile
+tasks:
+- name: supervisord
+  command: /usr/bin/supervisord -c $HOME/supervisord.conf

@@ -1,0 +1,31 @@
+<domain type='qemu'>
+  <name>test-vm</name>
+  <uuid>a9f85168-47d6-4fc1-acc4-37bce2c396fa</uuid>
+  <memory unit='MiB'>1024</memory>
+  <vcpu>4</vcpu>
+  <os>
+    <type arch='x86_64'>hvm</type>
+    <kernel>/home/gitpod/vmlinuz</kernel>
+    <initrd>/home/gitpod/initrd.img</initrd>
+    <cmdline>console=tty0 console=ttyS0,115200n8 ip=dhcp</cmdline>
+  </os>
+  <features>
+    <acpi/>
+  </features>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <devices>
+    <interface type='user'/>
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+  </devices>
+  <filesystem type='mount' accessmode='mapped-xattr'>
+    <source dir='/workspaces/cremona'/>
+    <target dir='build'/>
+  </filesystem>
+</domain>

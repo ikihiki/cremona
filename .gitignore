@@ -3,3 +3,5 @@
 !/.vscode/settings.json
 bin
 obj
+supervisord.log
+supervisord.pid
