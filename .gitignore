@@ -5,3 +5,9 @@ bin
 obj
 supervisord.log
 supervisord.pid
+bazel-bin
+bazel-out
+bazel-cremona
+bazel-testlogs
+external
+.cache
