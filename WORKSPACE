@@ -13,8 +13,6 @@ http_archive(
 load("@hedron_compile_commands//:workspace_setup.bzl", "hedron_compile_commands_setup")
 hedron_compile_commands_setup()
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 http_archive(
     name = "rules_foreign_cc",
     # TODO: Get the latest sha256 value from a bazel debug message or the latest 
