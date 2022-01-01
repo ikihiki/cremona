@@ -10,16 +10,11 @@ int allocate_id(id_map_t *map, void *data);
 void add_id(id_map_t *map, int id, void *data);
 void* remove_id(id_map_t *map, int id);
 size_t get_length(id_map_t *map);
-void update_id(id_map_t *context, int id, void(*func)(void *data, void *capture), void *capture);
+void update_id(id_map_t *map, int id, void(*func)(void *data, void *context), void *context);
 void for_each_id_map(id_map_t *map, void(*func)(int id, void *data, void *context), void *context);
 
 
 typedef struct socket_context socket_context_t;
-
-socket_context_t *create_socket_context();
-void destroy_socket_context(socket_context_t *context);
-
-
 
 typedef struct {
   char name[100];
@@ -53,7 +48,7 @@ typedef struct socket{
 
 
 
-void init_socket(socket_t *socket);
+void init_socket(socket_t *socket, socket_context_t *context);
 void destroy_socket(socket_t *socket);
 void recive_data_to_socket(socket_t *socket, char *data, size_t size);
 
@@ -72,7 +67,9 @@ void send(socket_t *socket, int address, int stream, char *data, size_t size,
 
 typedef struct {
   id_map_t *devices;
+  socket_t *socket;
 } crmna_t;
 
+void create_cremona(crmna_t *crmna, socket_t *socket);
 
 bool dump_state(crmna_t *crmna, void *buff, size_t size);

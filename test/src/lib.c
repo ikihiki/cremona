@@ -2,13 +2,12 @@
 
 int add(int a, int b) { return a + b; }
 
-void init_socket(socket_t *socket) {
-  socket->context = create_socket_context();
+void init_socket(socket_t *socket, socket_context_t *context) {
+  socket->context = context;
   socket->connections = create_id_map();
 }
 
 void destroy_socket(socket_t *socket) {
-  destroy_socket_context(socket->context);
   destroy_id_map(socket->connections);
 }
 
@@ -20,8 +19,9 @@ void send(socket_t *socket, int address, int stream, char *data, size_t size,
           }
 
 
-void create_cremona(crmna_t *crmna){
-
+void create_cremona(crmna_t *crmna, socket_t *socket){
+  crmna->socket = socket;
+  crmna->devices = create_id_map();
 }
 
 void write_data(){
