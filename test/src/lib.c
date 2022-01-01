@@ -16,3 +16,13 @@ void send(socket_t *socket, int address, int stream, char *data, size_t size,
           reciv_func_t reciv_func, void *context) {
               
           }
+
+
+void create_cremona(crmna_t *crmna){
+
+}
+
+void write_data(){
+
+}
+
