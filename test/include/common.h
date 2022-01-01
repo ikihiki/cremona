@@ -1,17 +1,23 @@
 #include <stdbool.h>
 #include <stddef.h>
-
+#include <stdint.h>
 int add(int a, int b);
 
+typedef struct id_map id_map_t;
+id_map_t* create_id_map();
+void destroy_id_map(id_map_t *map);
+int allocate_id(id_map_t *map, void *data);
+void add_id(id_map_t *map, int id, void *data);
+void* remove_id(id_map_t *map, int id);
+size_t get_length(id_map_t *map);
+void update_id(id_map_t *context, int id, void(*func)(void *data, void *capture), void *capture);
+void for_each_id_map(id_map_t *map, void(*func)(int id, void *data, void *context), void *context);
+
+
 typedef struct socket_context socket_context_t;
-socket_context_t* create_socket_context();
+
+socket_context_t *create_socket_context();
 void destroy_socket_context(socket_context_t *context);
-int allocate_id(socket_context_t *context, void *data);
-void* remove_id(socket_context_t *context, int id);
-void update_id(socket_context_t *context, int id, void(*func)(void *data, void *capture), void *capture);
-
-typedef struct {}dic_t;
-
 
 
 
@@ -25,23 +31,23 @@ typedef struct packet {
   char *data;
   uint32_t offset;
   uint32_t length;
-}
+} packet_t;
 
 typedef struct {
   uint32_t stream_id;
-  dic_t *send_buffer
-  dic_t *recive_buffer;
-} stream_t
+  id_map_t *send_buffer;
+  id_map_t *recive_buffer;
+} stream_t;
 
 
 typedef struct {
-  dic_t *streams;
-  dic_t *pending_packets;
-} connection_t
+  id_map_t *streams;
+  id_map_t *pending_packets;
+} connection_t;
 
 typedef struct socket{
   socket_context_t *context;
-  dic_t *connections;
+  id_map_t *connections;
 } socket_t;
 
 
@@ -65,5 +71,8 @@ void send(socket_t *socket, int address, int stream, char *data, size_t size,
           reciv_func_t reciv_func, void *context);
 
 typedef struct {
-  dic_t *devices;
+  id_map_t *devices;
 } crmna_t;
+
+
+bool dump_state(crmna_t *crmna, void *buff, size_t size);
