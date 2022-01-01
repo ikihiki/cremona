@@ -64,8 +64,4 @@ TEST(socket, connect){
     }
 
     recive_data_to_socket(&socket, buffer, mess_len);
-    
-
-
-
 }
