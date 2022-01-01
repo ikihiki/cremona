@@ -33,3 +33,8 @@ bool dump_state(crmna_t *crmna, void *buff, size_t size){
 
   return true;
 }
+
+
+size_t dump_socket(socket_t *socket){
+  
+}
